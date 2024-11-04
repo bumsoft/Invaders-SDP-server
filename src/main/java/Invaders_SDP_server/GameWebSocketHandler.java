@@ -18,7 +18,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private final GameService gameService;
 
     // DTO을 json 형태로 변환
-    privtae final ObjectMapper objectMapper = new ObjectMapper();
+    final ObjectMapper objectMapper = new ObjectMapper();
 
     // 두명의 클라이언트를 위한 WebSocketSession session1, session2의 위치 정보를 따로 관리
     // WebSocketSession은 클라이언트와 서버 간의 연결을 나타내는 객체 (key로 사용)
