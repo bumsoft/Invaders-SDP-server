@@ -28,13 +28,13 @@ public class Bullet {
 
     // 총알과 상대 플레이어의 위치를 비교하여 충돌 여부 확인
     public boolean checkCollision(Player player, Player enemyPlayer) {
-        int playerX = player.getX();
-        int playerY = player.getY();
+        int enemyPlayerX = enemyPlayer.getX();
+        int enemyPlayerY = enemyPlayer.getY();
 
         // 총알과 플레이어의 위치 차이가 일정 거리 이내인지
         int collisionThreshold = 5;
-        return Math.abs(this.x - playerX) < collisionThreshold &&
-                Math.abs(this.y - playerY) < collisionThreshold;
+        return Math.abs(this.x - enemyPlayerX) < collisionThreshold &&
+                Math.abs(this.y - enemyPlayerY) < collisionThreshold;
     }
 
     // 총알이 화면 밖으로 나갔는지 확인하는 메소드
