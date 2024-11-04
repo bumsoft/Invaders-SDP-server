@@ -27,7 +27,7 @@ public class Bullet {
     }
 
     // 총알과 상대 플레이어의 위치를 비교하여 충돌 여부 확인
-    public boolean checkCollision(Player player) {
+    public boolean checkCollision(Player player, Player enemyPlayer) {
         int playerX = player.getX();
         int playerY = player.getY();
 

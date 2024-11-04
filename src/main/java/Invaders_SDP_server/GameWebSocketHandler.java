@@ -73,8 +73,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         // 두 클라이언트가 모두 연결된 경우
         if(player != null && enemyPlayer != null){
             // player1의 위치 정보를 player1과 player2에게 전송 - 문자열 대신 json으로 데이터 보내기
-            PositionDTO positionDTO = new PositionDTO(player.getX(), player.getY(),
-                    enemyPlayer.getX(), enemyPlayer.getY());
+            PositionDTO positionDTO = new PositionDTO(player, enemyPlayer);
             try{
                 // DTO를 json으로
                 String json = objectMapper.writeValueAsString(positionDTO);
@@ -92,7 +91,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             while(iterator1.hasNext()){
                 Bullet bullet = iterator1.next();
                 // 충돌 혹은 화면 밖으로 나가면 삭제
-                if(bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()){
+                if(bullet.checkCollision(player, enemyPlayer) || bullet.isOutOfBounds()){
                     iterator1.remove();
                 }
             }
@@ -102,7 +101,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             while(iterator2.hasNext()){
                 Bullet bullet = iterator2.next();
                 // 충돌 혹은 화면 밖으로 나가면 삭제
-                if(bullet.checkCollision(player) || bullet.isOutOfBounds()){ // 충돌 났으면 제거
+                if(bullet.checkCollision(player, enemyPlayer) || bullet.isOutOfBounds()){ // 충돌 났으면 제거
                     iterator2.remove();
                 }
             }
