@@ -37,7 +37,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             String msg = message.getPayload().toLowerCase();
 
             // 클라이언트로부터 GET요청을 받았을 때 서버에서 최신화된 위치 정보를 GET요청을 보낸 클라이언트에게 전송
-            if("GET".equals(msg)) {
+            if("get".equals(msg)) {
                 sendUpdatedPosition(session);
             }
             else if("shoot".equals(msg)) { // 클라이언트가 스페이스바를 눌러서 shoot 요청을 보내면
