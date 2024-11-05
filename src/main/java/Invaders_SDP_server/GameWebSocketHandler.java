@@ -2,6 +2,7 @@ package Invaders_SDP_server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -38,11 +39,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
             String msg = message.getPayload().toLowerCase();
 
-            // 클라이언트로부터 GET요청을 받았을 때 서버에서 최신화된 위치 정보를 GET요청을 보낸 클라이언트에게 전송
-            if("get".equals(msg)) {
-                sendUpdatedPosition(session);
-            }
-            else if("shoot".equals(msg)) { // 클라이언트가 스페이스바를 눌러서 shoot 요청을 보내면
+            if("shoot".equals(msg)) { // 클라이언트가 스페이스바를 눌러서 shoot 요청을 보내면
                 Player player = sessions.get(session);
 
                 if(session.equals(session1)) { // session1(player1)은 위로 총알 발사
@@ -64,6 +61,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                 }
             }
+
+    }
+    // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
+    @Scheduled(fixedRate = 1000) // 1초마다 서버가 클라이언트에게 정보 전송
+    public void sendUpdatedPositionToAll(){
+        sessions.keySet().forEach(this::sendUpdatedPosition);
 
     }
 
