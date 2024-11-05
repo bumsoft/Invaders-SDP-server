@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 // Service 클래스에서는 각 플레이어의 위치 업데이트와 조회 수행
 public class GameService {
 
-    Player player = new Player();
-
-    // 입력 키에 따른 위치 정보 업데이트
+    // 입력 키에 따른 위치 정보 업데이트 - 화면을 벗어나는 경우 예외처리 필요!!!
     public void movePlayer(Player player, String msg){
         int x = player.getX();
         int y = player.getY();

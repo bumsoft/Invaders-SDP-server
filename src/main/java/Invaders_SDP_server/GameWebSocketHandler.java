@@ -46,10 +46,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 Player player = sessions.get(session);
 
                 if(session.equals(session1)) { // session1(player1)은 위로 총알 발사
-                    player.shoot_Bullet("up");
+                    player.shoot_Bullet(true);
                 }
                 else if(session.equals(session2)) { // session2(player2)는 아래로 총알 발사
-                    player.shoot_Bullet("down");
+                    player.shoot_Bullet(false);
 
                 }
             }
@@ -107,7 +107,7 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
                 while (iterator1.hasNext()) {
                     Bullet bullet = iterator1.next();
                     // 충돌 혹은 화면 밖으로 나가면 삭제
-                    if (bullet.checkCollision(player, enemyPlayer) || bullet.isOutOfBounds()) {
+                    if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) {
                         iterator1.remove();
                     }
                 }
@@ -117,7 +117,7 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
                 while (iterator2.hasNext()) {
                     Bullet bullet = iterator2.next();
                     // 충돌 혹은 화면 밖으로 나가면 삭제
-                    if (bullet.checkCollision(player, enemyPlayer) || bullet.isOutOfBounds()) { // 충돌 났으면 제거
+                    if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) { // 충돌 났으면 제거
                         iterator2.remove();
                     }
                 }
