@@ -1,21 +1,2 @@
-name: CodeClimate PR Review
-
-on:
-  pull_request:
-    branches:
-      - master
-
-jobs:
-  codeclimate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run CodeClimate Analysis
-        run: |
-          docker pull codeclimate/codeclimate
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE":/code \
-            -e CODECLIMATE_CODE="/code" \
-            codeclimate/codeclimate analyze
+env:
+  CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
