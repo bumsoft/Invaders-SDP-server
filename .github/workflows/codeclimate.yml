@@ -3,7 +3,8 @@ name: CodeClimate PR Review
 on:
   pull_request:
     branches:
-      - master
+      - main
+      - develop
 
 jobs:
   codeclimate:
@@ -13,8 +14,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run CodeClimate Analysis
-        uses: docker://codeclimate/codeclimate
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-        with:
-          args: analyze
+        run: |
+          docker pull codeclimate/codeclimate
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/code \
+            -e CODECLIMATE_CODE="/code" \
+            codeclimate/codeclimate analyze
