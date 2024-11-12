@@ -10,4 +10,4 @@ public class InvadersSdpServerApplication {
 		SpringApplication.run(InvadersSdpServerApplication.class, args);
 	}
 
-}
+
