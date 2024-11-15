@@ -42,9 +42,7 @@ public class SecurityConfig {
                                 .loginProcessingUrl("/login")
                                 .successHandler(customAuthenticationSuccessHandler()) // 로그인 성공 시 핸들러
                                 .failureHandler(customAuthenticationFailureHandler()) // 로그인 실패 시 핸들러
-
-
-                        )
+                )
 
                 //로그아웃 처리가 필요할까 싶긴함(지금은 안쓰이고있음)
                 .logout((logout)->logout
@@ -81,8 +79,6 @@ public class SecurityConfig {
             {
                 // 로그인 성공 시 리다이렉트를 비활성화하고, HTTP 응답 코드 200을 반환
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("{\"message\": \"Login successful\"}");
-                response.getWriter().flush();
             }
         };
     }
@@ -90,12 +86,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationFailureHandler customAuthenticationFailureHandler() {
         return (request, response, exception) -> {
-            // 실패 시 응답 코드 401 설정 및 JSON 응답 반환
+            // 실패 시 응답 코드 401 설정
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"message\": \"Login failed: Invalid username or password\"}");
-            response.getWriter().flush();
         };
     }
 }

@@ -21,8 +21,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @ColumnDefault("0")
     @Column(nullable = false)
-    private Long score;
+    private Long score = 0L;
 
 }

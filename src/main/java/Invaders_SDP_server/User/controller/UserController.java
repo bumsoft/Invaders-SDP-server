@@ -18,10 +18,8 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody RegisterDto registerDto) {
-        System.out.println("dd");
         try {
             userService.register(registerDto);
-            System.out.println("가입됨: " + registerDto.getUsername());
             return ResponseEntity.ok().build();
         } catch(Exception e) {
             e.printStackTrace();
