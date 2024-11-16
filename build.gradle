@@ -9,12 +9,14 @@ jacoco {
     toolVersion = "0.8.8"
 }
 jacocoTestReport {
-    dependsOn test // 테스트가 실행된 후 리포트 생성
+    dependsOn test // 테스트가 완료된 후 실행
     reports {
-        xml.enabled = true // XML 리포트 활성화 (Code Climate에서 필요)
-        html.enabled = false // HTML 리포트는 비활성화
+        xml.required.set(true) // XML 리포트 활성화
+        xml.outputLocation.set(file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")) // XML 리포트 경로 설정
+        html.required.set(false) // HTML 리포트 비활성화
     }
 }
+
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
