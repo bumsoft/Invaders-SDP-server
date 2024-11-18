@@ -27,10 +27,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<Void> test(Principal principal) {
-
-        System.out.println(principal.getName());
-        return ResponseEntity.ok().build();
+    @GetMapping("/username")
+    public String findUsername(Principal principal) {
+        return principal.getName();
     }
 }
