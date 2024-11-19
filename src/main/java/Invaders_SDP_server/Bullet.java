@@ -6,16 +6,17 @@ import lombok.Data;
 @Data
 // 서버에서 총알 관리 (Player 와는 독립적으로 작성)
 public class Bullet {
+    private static final int SCREEN_HEIGHT = 600;
     // 총알 위치 좌표, 속도, 방향
     private int x;
     private int y;
     private boolean direction;  // True면 위로 발사, False면 아래로 발사
     static final int speed = 7; // 총알 속도 통일, 현재로서는 변경하지 않기로 함 - 수치는 추후 플레이 해보면서 조정 필요함
 
-    public Bullet(int x, int y, boolean bulletDirection) {
+    public Bullet(int x, int y, boolean direction) {
         this.x = x;
         this.y = y;
-        this.direction = bulletDirection;
+        this.direction = direction;
     }
 
     // 총알 위치 업데이트 메소드
