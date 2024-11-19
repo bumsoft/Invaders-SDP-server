@@ -44,12 +44,10 @@ public class SecurityConfig {
                                 .failureHandler(customAuthenticationFailureHandler()) // 로그인 실패 시 핸들러
                 )
 
-                //로그아웃 처리가 필요할까 싶긴함(지금은 안쓰이고있음)
                 .logout((logout)->logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                         .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")) //세션삭제
+                        .invalidateHttpSession(true))//세션삭제
         ;
 
         return http.build();

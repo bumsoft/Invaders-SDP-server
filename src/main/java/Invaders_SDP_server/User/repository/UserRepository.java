@@ -1,10 +1,9 @@
-package Invaders_SDP_server.User;
+package Invaders_SDP_server.User.repository;
 
 import Invaders_SDP_server.User.domain.User;
 import Invaders_SDP_server.User.dto.UserScoreDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 import java.util.Optional;

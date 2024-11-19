@@ -1,6 +1,6 @@
 package Invaders_SDP_server.User.service;
 
-import Invaders_SDP_server.User.UserRepository;
+import Invaders_SDP_server.User.repository.UserRepository;
 import Invaders_SDP_server.User.domain.User;
 import Invaders_SDP_server.User.dto.RegisterDto;
 import Invaders_SDP_server.User.dto.UserScoreDto;

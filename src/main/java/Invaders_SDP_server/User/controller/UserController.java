@@ -39,8 +39,9 @@ public class UserController {
     {
         return userService.getRanking();
     }
+
     @GetMapping("/updateRank/{score}")
-    public void updateRank(@PathVariable Long score,Principal principal)
+    public void updateRank(@PathVariable("score") Long score,Principal principal)
     {
         userService.updateRank(principal.getName(),score);
     }
