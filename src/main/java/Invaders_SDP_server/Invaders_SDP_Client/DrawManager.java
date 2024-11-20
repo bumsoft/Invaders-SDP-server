@@ -5,6 +5,7 @@ import Invaders_SDP_server.BulletPositionDTO;
 import Invaders_SDP_server.Player;
 import Invaders_SDP_server.PositionDTO;
 
+import java.awt.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,16 +43,26 @@ public class DrawManager {
     }
 
     // 현재 화면에 표시할 상태를 GameRenderer에 전달
-    public void draw(GameRenderer renderer) {
-        renderer.drawPlayer(player.getX(), player.getY());
-        renderer.drawEnemyPlayer(enemyPlayer.getX(), enemyPlayer.getY());
+    public void draw(Graphics g) {
+        // 플레이어 그리기
+        g.setColor(Color.WHITE);
+        g.fillRect(player.getX(), player.getY(), 50, 50); // 플레이어 렌더링
 
+        // 적 플레이어 그리기
+        g.setColor(Color.RED);
+        g.fillRect(enemyPlayer.getX(), enemyPlayer.getY(), 50, 50); // 적 플레이어 렌더링
+
+        // 플레이어 총알 그리기
+        g.setColor(Color.WHITE);
         for (Bullet bullet : playerBullets) {
-            renderer.drawBullet(bullet.getX(), bullet.getY(), "green");
+            g.fillRect(bullet.getX(), bullet.getY(), 5, 10);
         }
 
+        // 적 총알 그리기
+        g.setColor(Color.RED);
         for (Bullet bullet : enemyBullets) {
-            renderer.drawBullet(bullet.getX(), bullet.getY(), "purple");
+            g.fillRect(bullet.getX(), bullet.getY(), 5, 10);
         }
     }
+
 }

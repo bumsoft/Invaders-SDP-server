@@ -45,7 +45,7 @@ public class WebSocketClientManager {
             @Override
             public void afterConnectionEstablished(WebSocketSession session) {
                 WebSocketClientManager.this.session = session; // 세션 저장
-                logger.info("WebSocket 연결 성공!");
+                logger.info("WebSocket connected successfully");
             }
 
             @Override
@@ -55,7 +55,7 @@ public class WebSocketClientManager {
 
             @Override
             public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus closeStatus) {
-                logger.info("WebSocket 연결이 종료되었습니다. 사유: " + closeStatus.getReason());
+                logger.info("WebSocket connection lost reason: " + closeStatus.getReason());
             }
         };
 
@@ -64,13 +64,13 @@ public class WebSocketClientManager {
         future.addCallback(new ListenableFutureCallback<>() {
             @Override
             public void onSuccess(WebSocketSession result) {
-                logger.info("WebSocket 연결 성공!");
+                logger.info("WebSocket connected success!");
                 session = result; // 세션 저장
             }
 
             @Override
             public void onFailure(Throwable ex) {
-                logger.severe("WebSocket 연결 실패: " + ex.getMessage());
+                logger.severe("WebSocket failed to connected: " + ex.getMessage());
             }
         });
     }
@@ -85,7 +85,7 @@ public class WebSocketClientManager {
                 logger.severe("Failed to send message: " + e.getMessage());
             }
         } else {
-            logger.warning("WebSocket 연결이 열려 있지 않습니다.");
+            logger.warning("WebSocket connection lost!");
         }
     }
 }

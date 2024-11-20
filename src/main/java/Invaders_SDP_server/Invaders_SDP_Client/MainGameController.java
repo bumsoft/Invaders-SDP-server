@@ -1,52 +1,127 @@
 package Invaders_SDP_server.Invaders_SDP_Client;
 
+import Invaders_SDP_server.BulletPositionDTO;
+import Invaders_SDP_server.GameStateDTO;
+import Invaders_SDP_server.Player;
+import Invaders_SDP_server.PositionDTO;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-// 클라이언트 초기화 및 실행
-public class MainGameController {
+public class MainGameController extends JPanel {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
 
-    public static void main(String[] args) {
-        // JFrame 생성 - GUI 생성
-        JFrame frame = new JFrame("Invaders Game");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(WIDTH, HEIGHT);
+    private GameStateManager gameStateManager;
+    private WebSocketClientManager webSocketClientManager;
+    private DrawManager drawManager;
 
-        // 캔버스 생성 및 추가 - 검은 배경 화면
-        Canvas canvas = new Canvas();
-        canvas.setSize(WIDTH, HEIGHT);
-        canvas.setBackground(Color.BLACK);
+    public MainGameController() {
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setBackground(Color.BLACK); // 배경 설정
 
-        // WebSocketClientManager 및 GameInputHandler 초기화 - gameStateManager는 현재 null -> 비활성화 상태
-        GameStateManager gameStateManager = new GameStateManager();
-        WebSocketClientManager webSocketClientManager = new WebSocketClientManager("localhost:8080/game", gameStateManager);
-        GameInputHandler inputHandler = new GameInputHandler(webSocketClientManager);
+        // 게임 상태 및 웹소켓 초기화
+        gameStateManager = new GameStateManager();
+        webSocketClientManager = new WebSocketClientManager("ws://localhost:8080/game", gameStateManager);
 
-        // 입력 처리기 추가
-        canvas.addKeyListener((KeyListener) inputHandler);
-        canvas.setFocusable(true); // 키보드 포커스를 받을 수 있도록 설정
+        // 플레이어 초기화
+        Player player = new Player(400, 500, true, new ArrayList<>(), false, false); // 플레이어 초기 위치
+        Player enemyPlayer = new Player(400, 100, false, new ArrayList<>(), false, false); // 적 초기 위치
 
-        // 캔버스를 프레임에 추가
-        frame.add(canvas);
-        frame.setVisible(true);
+        // DrawManager 초기화
+        drawManager = new DrawManager(player, enemyPlayer);
 
-        // 간단한 렌더링 루프 - 수정 필요
-        Graphics graphics = canvas.getGraphics();
-        while (true) {
-            // 화면을 검은색으로 초기화
-            graphics.setColor(Color.BLACK);
-            graphics.fillRect(0, 0, WIDTH, HEIGHT);
-
-            // 필요 시, 게임 상태에 따라 플레이어 및 기타 요소 그리기
-
-            try {
-                Thread.sleep(16); // 약 60FPS
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        // 키 입력 처리
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                handleKeyInput(e, true);
             }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                handleKeyInput(e, false);
+            }
+        });
+        setFocusable(true); // 키 입력 활성화
+    }
+
+    private void handleKeyInput(KeyEvent e, boolean pressed) {
+        String command = null;
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_A -> command = pressed ? "a" : "stop";
+            case KeyEvent.VK_W -> command = pressed ? "w" : "stop";
+            case KeyEvent.VK_S -> command = pressed ? "s" : "stop";
+            case KeyEvent.VK_D -> command = pressed ? "d" : "stop";
+            case KeyEvent.VK_SPACE -> command = pressed ? "shoot" : "stopShoot";
+        }
+
+        if (command != null) {
+            webSocketClientManager.sendMessage(command);
         }
     }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // 배경 초기화
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        // DrawManager를 통해 플레이어와 적, 총알 등을 렌더링
+        drawManager.draw(g);
+    }
+
+    public void startGameLoop() {
+        Timer timer = new Timer(16, e -> {
+            updateGameState(); // 게임 상태 갱신
+            repaint(); // 화면 갱신
+        });
+        timer.start();
+    }
+
+    private void updateGameState() {
+        // PositionDTO: 두 플레이어의 위치 정보
+        PositionDTO playerPosition = gameStateManager.getPlayerPosition(); // 서버에서 받은 플레이어 위치
+        if (playerPosition == null) {
+            playerPosition = new PositionDTO(200, 200, 100, 100); //
+        }
+
+        // List<BulletPositionDTO>: 플레이어와 적 총알 리스트
+        List<BulletPositionDTO> playerBullets = gameStateManager.getPlayerBullets();
+        List<BulletPositionDTO> enemyBullets = gameStateManager.getEnemyBullets();
+
+        // Null 방지: 리스트가 null이면 빈 리스트로 초기화
+        if (playerBullets == null) playerBullets = new ArrayList<>();
+        if (enemyBullets == null) enemyBullets = new ArrayList<>();
+
+        // GameStateDTO 생성
+        GameStateDTO gameState = new GameStateDTO(playerPosition, playerBullets, enemyBullets);
+
+        // GameStateManager 업데이트
+        gameStateManager.updateGameState(gameState);
+
+        // DrawManager를 사용하여 위치 및 총알 업데이트
+        drawManager.updatePositions(gameStateManager.getPlayerPosition());
+        drawManager.updateBullets(gameStateManager.getPlayerBullets(), gameStateManager.getEnemyBullets());
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Invaders Game");
+        MainGameController gamePanel = new MainGameController();
+
+        frame.add(gamePanel);
+        frame.pack();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+
+        gamePanel.startGameLoop(); // 게임 루프 시작
+    }
 }
+
