@@ -27,7 +27,7 @@ public class Bullet {
         else{  //session2(player2)는 위에서 아래로만 공격
             y += speed;
         }
-
+        System.out.println("Bullet position updated to: (" + x + ", " + y + ")"); // 디버깅 로그
     }
 
     // 총알과 상대 플레이어의 위치를 비교하여 충돌 여부 확인

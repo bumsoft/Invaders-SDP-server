@@ -26,8 +26,9 @@ public class Player {
     // 총알 발사 메소드 - 플레이어가 총알을 발사하면 bullets 리스트에 추가
     public void shoot_Bullet(boolean bullet_direction){
         isShooting = true;
-        Bullet bullet = new Bullet(this.x, this.y, bullet_direction);
+        Bullet bullet = new Bullet(this.x + 22, this.y, bullet_direction); // 플레이어의 중앙에서 발사 시작
         bullets.add(bullet);
+        System.out.println("Bullet created at (" + this.x + ", " + this.y + ")"); // 디버깅 로그
     }
 
     public void stopShooting() {

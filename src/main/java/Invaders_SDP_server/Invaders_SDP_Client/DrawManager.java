@@ -64,6 +64,7 @@ public class DrawManager {
         g.setColor(Color.WHITE);
         for (Bullet bullet : playerBullets) {
             g.fillRect(bullet.getX(), bullet.getY(), 5, 10);
+            System.out.println("Drawing bullet at: (" + bullet.getX() + ", " + bullet.getY() + ")"); // 디버깅 로그
         }
 
         // 적 총알 그리기

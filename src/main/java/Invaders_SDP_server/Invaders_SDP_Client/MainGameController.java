@@ -1,9 +1,6 @@
 package Invaders_SDP_server.Invaders_SDP_Client;
 
-import Invaders_SDP_server.BulletPositionDTO;
-import Invaders_SDP_server.GameStateDTO;
-import Invaders_SDP_server.Player;
-import Invaders_SDP_server.PositionDTO;
+import Invaders_SDP_server.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -73,8 +70,15 @@ public class MainGameController extends JPanel {
             drawManager.getPlayer().move("s");
         }
 
-        if (!pressed) {
-            drawManager.getPlayer().stopMoving(); // 키를 뗐을 때 멈춤 처리
+        // 스페이스바 처리: 총알 발사
+        if (key == KeyEvent.VK_SPACE && pressed) {
+            System.out.println("Spacebar pressed!"); // 디버깅 로그
+            drawManager.getPlayer().shoot_Bullet(true); // 위로 발사
+        }
+
+        // 키를 뗐을 때 멈춤 처리
+        if (!pressed && (key == KeyEvent.VK_A || key == KeyEvent.VK_D || key == KeyEvent.VK_W || key == KeyEvent.VK_S)) {
+            drawManager.getPlayer().stopMoving();
         }
 
         repaint(); // 화면 갱신
@@ -94,13 +98,31 @@ public class MainGameController extends JPanel {
 
     public void startGameLoop() {
         Timer timer = new Timer(16, e -> {
+            moveBullets(); // 총알 이동 처리
             updateGameState(); // 게임 상태 갱신
             repaint(); // 화면 갱신
         });
         timer.start();
     }
 
-    public void updateGameState() {ad
+    private void moveBullets() {
+        // 플레이어 총알 이동
+        List<Bullet> playerBullets = drawManager.getPlayer().getBullets();
+        playerBullets.removeIf(bullet -> {
+            bullet.updateBulletMove(); // 총알 이동
+            System.out.println("Bullet moved to: (" + bullet.getX() + ", " + bullet.getY() + ")"); // 디버깅 로그
+            return bullet.isOutOfBounds(); // 화면 밖으로 나가면 제거
+        });
+
+        // 적 총알 이동 (필요하면 추가)
+        List<Bullet> enemyBullets = drawManager.getEnemyPlayer().getBullets();
+        enemyBullets.removeIf(bullet -> {
+            bullet.updateBulletMove();
+            return bullet.isOutOfBounds();
+        });
+    }
+
+    public void updateGameState() {
         // 클라이언트 상태를 기준으로 서버와 동기화
         PositionDTO clientPosition = new PositionDTO(
                 drawManager.getPlayer().getX(), // 플레이어 X 좌표
