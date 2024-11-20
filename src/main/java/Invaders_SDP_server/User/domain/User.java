@@ -2,13 +2,11 @@ package Invaders_SDP_server.User.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Setter
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -24,4 +22,15 @@ public class User {
     @Column(nullable = false)
     private Long score = 0L;
 
+
+    public User(String username, String password)
+    {
+        this.username = username;
+        this.password = password;
+    }
+
+    public void updateScore(Long score)
+    {
+        this.score = score;
+    }
 }
