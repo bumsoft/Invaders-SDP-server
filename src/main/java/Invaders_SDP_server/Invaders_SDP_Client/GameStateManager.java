@@ -16,11 +16,11 @@ public class GameStateManager {
     private List<BulletPositionDTO> playerBullets;
     private List<BulletPositionDTO> enemyBullets;
 
-    // 게임 상태 업데이트
     public void updateGameState(GameStateDTO gameState) {
         this.playerPosition = gameState.getPositionDTO();
         this.playerBullets = gameState.getPlayerBulletPositionDTO();
         this.enemyBullets = gameState.getEnemyBulletPositionDTO();
     }
+
 
 }

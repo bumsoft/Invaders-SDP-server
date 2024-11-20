@@ -21,6 +21,8 @@ public class MainGameController extends JPanel {
     private WebSocketClientManager webSocketClientManager;
     private DrawManager drawManager;
 
+    private final boolean[] keyStates = new boolean[256];
+
     public MainGameController() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK); // 배경 설정
@@ -52,18 +54,30 @@ public class MainGameController extends JPanel {
     }
 
     private void handleKeyInput(KeyEvent e, boolean pressed) {
-        String command = null;
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_A -> command = pressed ? "a" : "stop";
-            case KeyEvent.VK_W -> command = pressed ? "w" : "stop";
-            case KeyEvent.VK_S -> command = pressed ? "s" : "stop";
-            case KeyEvent.VK_D -> command = pressed ? "d" : "stop";
-            case KeyEvent.VK_SPACE -> command = pressed ? "shoot" : "stopShoot";
+        int key = e.getKeyCode();
+        if (key < keyStates.length) {
+            keyStates[key] = pressed; // 키 상태 기록
         }
 
-        if (command != null) {
-            webSocketClientManager.sendMessage(command);
+        // 키 상태에 따라 움직임 처리
+        if (keyStates[KeyEvent.VK_A]) {
+            drawManager.getPlayer().move("a");
         }
+        if (keyStates[KeyEvent.VK_D]) {
+            drawManager.getPlayer().move("d");
+        }
+        if (keyStates[KeyEvent.VK_W]) {
+            drawManager.getPlayer().move("w");
+        }
+        if (keyStates[KeyEvent.VK_S]) {
+            drawManager.getPlayer().move("s");
+        }
+
+        if (!pressed) {
+            drawManager.getPlayer().stopMoving(); // 키를 뗐을 때 멈춤 처리
+        }
+
+        repaint(); // 화면 갱신
     }
 
     @Override
@@ -74,7 +88,7 @@ public class MainGameController extends JPanel {
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, getWidth(), getHeight());
 
-        // DrawManager를 통해 플레이어와 적, 총알 등을 렌더링
+        // DrawManager 통해 플레이어와 적, 총알 등을 렌더링
         drawManager.draw(g);
     }
 
@@ -86,31 +100,30 @@ public class MainGameController extends JPanel {
         timer.start();
     }
 
-    private void updateGameState() {
-        // PositionDTO: 두 플레이어의 위치 정보
-        PositionDTO playerPosition = gameStateManager.getPlayerPosition(); // 서버에서 받은 플레이어 위치
-        if (playerPosition == null) {
-            playerPosition = new PositionDTO(200, 200, 100, 100); //
-        }
+    public void updateGameState() {ad
+        // 클라이언트 상태를 기준으로 서버와 동기화
+        PositionDTO clientPosition = new PositionDTO(
+                drawManager.getPlayer().getX(), // 플레이어 X 좌표
+                drawManager.getPlayer().getY(), // 플레이어 Y 좌표
+                drawManager.getEnemyPlayer().getX(), // 적 플레이어 X 좌표
+                drawManager.getEnemyPlayer().getY() // 적 플레이어 Y 좌표
+        );
 
-        // List<BulletPositionDTO>: 플레이어와 적 총알 리스트
-        List<BulletPositionDTO> playerBullets = gameStateManager.getPlayerBullets();
-        List<BulletPositionDTO> enemyBullets = gameStateManager.getEnemyBullets();
+        // 클라이언트의 현재 상태를 기반으로 GameStateDTO 생성 및 업데이트
+        gameStateManager.updateGameState(new GameStateDTO(
+                clientPosition, // 현재 위치 정보
+                gameStateManager.getPlayerBullets(), // 플레이어 총알 정보
+                gameStateManager.getEnemyBullets() // 적 총알 정보
+        ));
 
-        // Null 방지: 리스트가 null이면 빈 리스트로 초기화
-        if (playerBullets == null) playerBullets = new ArrayList<>();
-        if (enemyBullets == null) enemyBullets = new ArrayList<>();
-
-        // GameStateDTO 생성
-        GameStateDTO gameState = new GameStateDTO(playerPosition, playerBullets, enemyBullets);
-
-        // GameStateManager 업데이트
-        gameStateManager.updateGameState(gameState);
-
-        // DrawManager를 사용하여 위치 및 총알 업데이트
+        // DrawManager를 사용하여 위치 및 총알 상태 업데이트
         drawManager.updatePositions(gameStateManager.getPlayerPosition());
-        drawManager.updateBullets(gameStateManager.getPlayerBullets(), gameStateManager.getEnemyBullets());
+        drawManager.updateBullets(
+                gameStateManager.getPlayerBullets(),
+                gameStateManager.getEnemyBullets()
+        );
     }
+
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Invaders Game");

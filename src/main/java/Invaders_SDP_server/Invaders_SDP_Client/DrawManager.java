@@ -23,6 +23,14 @@ public class DrawManager {
         this.enemyPlayer = enemyPlayer;
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Player getEnemyPlayer() {
+        return enemyPlayer;
+    }
+
     // player, enemy_player 위치 업데이트
     public void updatePositions(PositionDTO positionDTO) {
         player.setPosition(positionDTO.getPlayerX(), positionDTO.getPlayerY());
