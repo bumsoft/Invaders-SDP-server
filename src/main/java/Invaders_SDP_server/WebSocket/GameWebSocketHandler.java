@@ -156,6 +156,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     public void sendUpdatedPositionToAll(){
         sessions.keySet().forEach(this::sendUpdatedPosition);
 
+        System.out.println("sendUpdatedPositionToAll");
     }
 
     // 위치 정보 업데이트 메소드 - 양방향 동기화
@@ -193,7 +194,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 // DTO를 json으로
                 String json = objectMapper.writeValueAsString(positionDTO);
 
-                session.sendMessage(new TextMessage(json));
+                session.sendMessage(new TextMessage("UPDATE-"+json));
 
             } catch (Exception e) {
                 e.printStackTrace();

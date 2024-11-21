@@ -19,17 +19,11 @@ public class GameService {
         int y = player.getY();
 
         switch(msg){
-            case "a":
+            case "left":
                 player.setX(x-2);
                 break;
-            case "s":
-                player.setX(y-2);
-                break;
-            case "d":
+            case "right":
                 player.setX(x+2);
-                break;
-            case "w":
-                player.setX(y+2);
                 break;
         }
     }

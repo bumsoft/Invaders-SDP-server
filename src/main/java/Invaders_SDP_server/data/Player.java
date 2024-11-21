@@ -15,8 +15,8 @@ import static Invaders_SDP_server.data.Bullet.speed;
 public class Player {
 
     // 플레이어의 위치 좌표 x, y
-    private int x;
-    private int y;
+    private int x=100; //임시값
+    private int y=100;
     private boolean direction; // player1(session1) 총알의 direction은 아래에서 위(True), player2(session2) 총알은 위에서 아래(False)
     private List<Bullet> bullets = new ArrayList<Bullet>();
 
