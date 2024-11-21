@@ -46,6 +46,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // sessions맵 생성 - session i, player 객체 저장하여 관리
     private final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();
 
+    // 방 별로 세션, 상태 관리
+    private final Map<String, WebSocketSession> roomSessions = new ConcurrentHashMap<>();
+
+    @Autowired
+    RoomService roomService;
+
     // 생성자 - GameService에 의존함
     @Autowired
     public GameWebSocketHandler(GameService gameService) {
@@ -53,35 +59,73 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-            String msg = message.getPayload().toLowerCase();
+        String msg = message.getPayload().toLowerCase();
+        String[] parts = msg.split("-");
+        switch (parts[0]) {
+            case "create" -> {
+                Room created = roomService.createRoom(parts[1]);
+                roomSessions.put(created.getPlayer1().getUsername(),session);
+                session.sendMessage(new TextMessage("Created-"+created.getKey()));
+            }
+            case "join" -> {
+                Room updated = roomService.joinRoom(parts[1],Long.parseLong(parts[2]));
+                if(updated == null){
+                    session.sendMessage(new TextMessage("JoinedFailed-Full"));
+                }
+                else{
+                    roomSessions.put(updated.getPlayer2().getUsername(),session);
+                    session.sendMessage(new TextMessage("Joined-"+updated.getPlayer1().getUsername()));
+                    roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Joined-"+updated.getPlayer2().getUsername()));
+                }
+            }
+            case "ready" -> {
+                Room updated = roomService.playerReady(parts[1]);
+                if(updated.isPlayer1Ready() && updated.isPlayer2Ready()){
+                    //둘다 레디일때
+                    roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Start"));
+                    roomSessions.get(updated.getPlayer2().getUsername()).sendMessage(new TextMessage("Start"));
+                }
+                else if(updated.isPlayer1Ready()){
+                    roomSessions.get(updated.getPlayer2().getUsername()).sendMessage(new TextMessage("Ready-"+updated.getPlayer1().getUsername()));
+                }
+                else {
+                    roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Ready-"+updated.getPlayer2().getUsername()));
+                }
+            }
+            case "close" ->{
 
-        switch (msg) {
-            case "shoot" -> { // 스페이스바 눌렀을 때 (총알 발사)
-                Player player = sessions.get(session);
-                if (session.equals(session1)) {
-                    player.shoot_Bullet(true); // 위로 발사
-                } else if (session.equals(session2)) {
-                    player.shoot_Bullet(false); // 아래로 발사
-                }
             }
-            case "stopshoot" -> { // 스페이스바를 뗐을 때 (총알 발사 중지)
-                Player player = sessions.get(session);
-                player.stopShooting();
-            }
-            case "stop" -> { // 이동을 멈췄을 때
-                Player player = sessions.get(session);
-                player.stopMoving();
-            }
-            default -> { // a, w, s, d 키 입력으로 이동 처리
-                if (session.equals(session1) && session2 != null) {
-                    Player player1 = sessions.get(session1);
-                    gameService.movePlayer(player1, msg);
-                } else if (session.equals(session2) && session1 != null) {
-                    Player player2 = sessions.get(session2);
-                    gameService.movePlayer(player2, msg);
-                }
+            default -> {
+
             }
         }
+            switch (msg) {
+                case "shoot" -> { // 스페이스바 눌렀을 때 (총알 발사)
+                    Player player = sessions.get(session);
+                    if (session.equals(session1)) {
+                        player.shoot_Bullet(true); // 위로 발사
+                    } else if (session.equals(session2)) {
+                        player.shoot_Bullet(false); // 아래로 발사
+                    }
+                }
+                case "stopshoot" -> { // 스페이스바를 뗐을 때 (총알 발사 중지)
+                    Player player = sessions.get(session);
+                    player.stopShooting();
+                }
+                case "stop" -> { // 이동을 멈췄을 때
+                    Player player = sessions.get(session);
+                    player.stopMoving();
+                }
+                default -> { // a, w, s, d 키 입력으로 이동 처리
+                    if (session.equals(session1) && session2 != null) {
+                        Player player1 = sessions.get(session1);
+                        gameService.movePlayer(player1, msg);
+                    } else if (session.equals(session2) && session1 != null) {
+                        Player player2 = sessions.get(session2);
+                        gameService.movePlayer(player2, msg);
+                    }
+                }
+            }
 
     }
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
@@ -153,33 +197,6 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
     // 새로운 클라이언트가 연결된 경우
     @Override
     public void afterConnectionEstablished(WebSocketSession session){
-        // roomID 추출 -- 메소드 만들어야함 (ex: /game?roomId=1234 에서 roomId 추출)
-        Long roomID = getRoomIDFromSession(session);
-
-        // 해당 방에 세션 추가
-        roomSessions.computeIfAbsent(roomID, k -> new ConcurrentHashMap<>()).put(session, new Player());
-
-        ObjectNode currentRoomSessions;
-        currentRoomSessions.put(session, new Player());
-
-        // 현재 방에서 세션 리스트 가져와서 -- 메소드 만들기
-        Map<WebSocketSession, Player> players = roomSessions.get(roomID);
-        try{
-            if(currentRoomSessions.size() == 1){
-                session.sendMessage(new TextMessage("You are Player 1."));
-            }
-            else if(currentRoomSessions.size() == 2){
-                session.sendMessage(new TextMessage("You are Player 2."));
-            }
-            else{
-                session.sendMessage(new TextMessage("Room is full. Closing connection."));
-                session.close();
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        /*
         // 새로운 클라이언트가 등록될 때마다 초기 위치 좌표값 부여
         // sessions 맵에 저장
         Player newPlayer = new Player();
@@ -197,27 +214,15 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
                 session.sendMessage(new TextMessage("Game session is full. Please try again later."));
                 session.close();
             }catch(Exception e){e.printStackTrace();}
-        } */
+        }
         return;
     }
-
-    private Long getRoomIDFromSession(WebSocketSession session) {
-        String uri = session.getUri().toString();
-        String roomIdStr = uri.split("roomId=")[1];
-        return Long.parseLong(roomIdStr);
-    }
-
 
     // 클라이언트가 연결을 종료한 경우
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status){
         sessions.remove(session);
-        if(session.equals(session1)){
-            session1 = null;
-        }
-        else if(session.equals(session2)){
-            session2 = null;
-        }
+        roomSessions.get(session)
     }
 
 }

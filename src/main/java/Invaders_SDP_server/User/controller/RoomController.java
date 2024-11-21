@@ -17,22 +17,22 @@ public class RoomController {
     @Autowired
     RoomService roomService;
 
-    @PostMapping("/room/create")
-    public ResponseEntity<Room> createRoom(@RequestBody RequestRoomDto requestRoomDto){
-        Room created = roomService.createRoom(requestRoomDto.getPlayer1Id());
-        if(created == null){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(created);
-    }
-
-    @GetMapping("/room/join/{key}")
-    public ResponseEntity<Room> joinRoom(@RequestBody RequestRoomDto requestRoomDto){
-        Room joined = roomService.joinRoom(requestRoomDto.getPlayer2Id(), requestRoomDto.getKey());
-        if(joined == null){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(joined);
-    }
+//    @PostMapping("/room/create")
+//    public ResponseEntity<Room> createRoom(@RequestBody RequestRoomDto requestRoomDto){
+//        Room created = roomService.createRoom(requestRoomDto.getPlayer1Id());
+//        if(created == null){
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//        return ResponseEntity.status(HttpStatus.OK).body(created);
+//    }
+//
+//    @GetMapping("/room/join/{key}")
+//    public ResponseEntity<Room> joinRoom(@RequestBody RequestRoomDto requestRoomDto){
+//        Room joined = roomService.joinRoom(requestRoomDto.getPlayer2Id(), requestRoomDto.getKey());
+//        if(joined == null){
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//        return ResponseEntity.status(HttpStatus.OK).body(joined);
+//    }
 
 }
