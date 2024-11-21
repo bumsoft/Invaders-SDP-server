@@ -63,7 +63,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             case "create" -> {
                 Room created = roomService.createRoom(parts[1]);
                 roomSessions.put(created.getPlayer1().getUsername(),session);
-                session.sendMessage(new TextMessage("Created-"+created.getKey()));
+                session.sendMessage(new TextMessage("Created-"+created.getAccessCode()));
             }
             case "join" -> {
                 Room updated = roomService.joinRoom(parts[1],Long.parseLong(parts[2]));

@@ -24,7 +24,7 @@ public class RoomService {
     @Transactional
     public Room createRoom(String username){
         Optional<User> player1 = userRepository.findByUsername(username);
-        Room newRoom = Room.builder().player1(player1.get()).key((long)(Math.random()*8999)+1000).player1Ready(false).player2Ready(false).build();
+        Room newRoom = Room.builder().player1(player1.get()).accessCode((long)(Math.random()*8999)+1000).player1Ready(false).player2Ready(false).build();
         Room created = roomRepository.save(newRoom);
         log.info("방생성완료 : {}",created);
         return created;
@@ -33,9 +33,9 @@ public class RoomService {
     @Transactional
     public Room joinRoom(String player2Name, long joinKey){
         Optional<User> player2 = userRepository.findByUsername(player2Name);
-        Room target = roomRepository.findByKey(joinKey);
+        Room target = roomRepository.findByAccessCode(joinKey);
         if(target.getPlayer2() == null){
-            Room updateRoom = Room.builder().id(target.getId()).player1(target.getPlayer1()).player2(player2.get()).player1Ready(false).player2Ready(false).key(target.getKey()).build();
+            Room updateRoom = Room.builder().id(target.getId()).player1(target.getPlayer1()).player2(player2.get()).player1Ready(false).player2Ready(false).accessCode(target.getAccessCode()).build();
             Room updated = roomRepository.save(updateRoom);
             return updated;
         }
@@ -48,12 +48,12 @@ public class RoomService {
         Optional<Room> target = roomRepository.findByPlayer1(player.get());
         if(target.isEmpty()){
             target = roomRepository.findByPlayer2(player.get());
-            Room updateRoom = Room.builder().id(target.get().getId()).player1(target.get().getPlayer1()).player2(target.get().getPlayer2()).player1Ready(target.get().isPlayer1Ready()).player2Ready(true).key(target.get().getKey()).build();
+            Room updateRoom = Room.builder().id(target.get().getId()).player1(target.get().getPlayer1()).player2(target.get().getPlayer2()).player1Ready(target.get().isPlayer1Ready()).player2Ready(true).accessCode(target.get().getAccessCode()).build();
             Room updated = roomRepository.save(updateRoom);
             return updated;
         }
         else{
-            Room updateRoom = Room.builder().id(target.get().getId()).player1(target.get().getPlayer1()).player2(target.get().getPlayer2()).player1Ready(true).player2Ready(target.get().isPlayer2Ready()).key(target.get().getKey()).build();
+            Room updateRoom = Room.builder().id(target.get().getId()).player1(target.get().getPlayer1()).player2(target.get().getPlayer2()).player1Ready(true).player2Ready(target.get().isPlayer2Ready()).accessCode(target.get().getAccessCode()).build();
             Room updated = roomRepository.save(updateRoom);
             return updated;
         }

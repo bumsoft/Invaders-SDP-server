@@ -16,7 +16,7 @@ public class Room {
     @Column(name = "room_number")
     private Long id;
 
-    private long key;
+    private long accessCode;
 
     @OneToOne
     @JoinColumn
