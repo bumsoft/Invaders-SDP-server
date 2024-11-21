@@ -142,7 +142,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 RoomStatus gameRoom = roomService.getRoom(parts[1]);
                 switch (gameRoom.player()){
                     case 1, 2 -> {
-                        gameService.movePlayer(player, msg);
+                        gameService.movePlayer(player, parts[0]);
                     }
                 }
 
