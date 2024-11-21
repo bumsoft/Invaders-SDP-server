@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static Invaders_SDP_server.Bullet.speed;
+import static Invaders_SDP_server.User.data.Bullet.speed;
 
 @Getter
 @Setter

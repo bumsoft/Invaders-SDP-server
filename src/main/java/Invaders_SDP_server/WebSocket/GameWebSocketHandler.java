@@ -5,8 +5,11 @@ import Invaders_SDP_server.User.dto.GameStateDTO;
 import Invaders_SDP_server.User.dto.PositionDTO;
 import Invaders_SDP_server.User.data.Bullet;
 import Invaders_SDP_server.User.data.Player;
+import Invaders_SDP_server.User.entity.Room;
 import Invaders_SDP_server.User.service.GameService;
+import Invaders_SDP_server.User.service.RoomService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -15,6 +18,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,7 @@ import java.util.stream.Collectors;
 // WebSocket 연결에서 발생하는 text메세지를 처리할 수 있게 함
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
+
     // GameWebSocketHandler에서 클라이언트와 서버간의 실시간 소통 관리
     // 게임의 상태를 관리하는 GameService - 플레이어가 이동할 때 위치를 업데이트(movePlayer 메소드 내포)
     private final GameService gameService;
@@ -148,6 +153,33 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
     // 새로운 클라이언트가 연결된 경우
     @Override
     public void afterConnectionEstablished(WebSocketSession session){
+        // roomID 추출 -- 메소드 만들어야함 (ex: /game?roomId=1234 에서 roomId 추출)
+        Long roomID = getRoomIDFromSession(session);
+
+        // 해당 방에 세션 추가
+        roomSessions.computeIfAbsent(roomID, k -> new ConcurrentHashMap<>()).put(session, new Player());
+
+        ObjectNode currentRoomSessions;
+        currentRoomSessions.put(session, new Player());
+
+        // 현재 방에서 세션 리스트 가져와서 -- 메소드 만들기
+        Map<WebSocketSession, Player> players = roomSessions.get(roomID);
+        try{
+            if(currentRoomSessions.size() == 1){
+                session.sendMessage(new TextMessage("You are Player 1."));
+            }
+            else if(currentRoomSessions.size() == 2){
+                session.sendMessage(new TextMessage("You are Player 2."));
+            }
+            else{
+                session.sendMessage(new TextMessage("Room is full. Closing connection."));
+                session.close();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        /*
         // 새로운 클라이언트가 등록될 때마다 초기 위치 좌표값 부여
         // sessions 맵에 저장
         Player newPlayer = new Player();
@@ -165,9 +197,16 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
                 session.sendMessage(new TextMessage("Game session is full. Please try again later."));
                 session.close();
             }catch(Exception e){e.printStackTrace();}
-        }
+        } */
         return;
     }
+
+    private Long getRoomIDFromSession(WebSocketSession session) {
+        String uri = session.getUri().toString();
+        String roomIdStr = uri.split("roomId=")[1];
+        return Long.parseLong(roomIdStr);
+    }
+
 
     // 클라이언트가 연결을 종료한 경우
     @Override
