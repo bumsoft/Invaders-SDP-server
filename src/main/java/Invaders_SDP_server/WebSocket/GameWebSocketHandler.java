@@ -3,8 +3,8 @@ package Invaders_SDP_server.WebSocket;
 import Invaders_SDP_server.User.dto.BulletPositionDTO;
 import Invaders_SDP_server.User.dto.GameStateDTO;
 import Invaders_SDP_server.User.dto.PositionDTO;
-import Invaders_SDP_server.User.entity.Bullet;
-import Invaders_SDP_server.User.entity.Player;
+import Invaders_SDP_server.User.data.Bullet;
+import Invaders_SDP_server.User.data.Player;
 import Invaders_SDP_server.User.service.GameService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +36,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // WebSocketSession은 클라이언트와 서버 간의 연결을 나타내는 객체 (key로 사용)
     private WebSocketSession session1;
     private WebSocketSession session2;
+
 
     // sessions맵 생성 - session i, player 객체 저장하여 관리
     private final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();

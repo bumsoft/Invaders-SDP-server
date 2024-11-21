@@ -5,7 +5,7 @@ package Invaders_SDP_server.User.service;
 // 수신된 방향 정보를 통해 어느 방향으로 얼만큼 이동할지 결정하고, 이를 gameservice로 전달하여
 // 위치를 업데이트
 
-import Invaders_SDP_server.User.entity.Player;
+import Invaders_SDP_server.User.data.Player;
 import org.springframework.stereotype.Service;
 
 
