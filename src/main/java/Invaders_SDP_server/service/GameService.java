@@ -1,11 +1,11 @@
-package Invaders_SDP_server.User.service;
+package Invaders_SDP_server.service;
 
 // 클라이언트가 WebSocket을 통해 서버로 정보를 전송한다
 // 서버의 WebSocketHandler는 클라이언트로부터 전송된 정보를 수신하고 메세지 확인한다
 // 수신된 방향 정보를 통해 어느 방향으로 얼만큼 이동할지 결정하고, 이를 gameservice로 전달하여
 // 위치를 업데이트
 
-import Invaders_SDP_server.User.data.Player;
+import Invaders_SDP_server.data.Player;
 import org.springframework.stereotype.Service;
 
 

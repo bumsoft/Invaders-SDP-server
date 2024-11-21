@@ -1,7 +1,7 @@
-package Invaders_SDP_server.User.repository;
+package Invaders_SDP_server.repository;
 
-import Invaders_SDP_server.User.entity.User;
-import Invaders_SDP_server.User.dto.Response_UserScoreDto;
+import Invaders_SDP_server.entity.User;
+import Invaders_SDP_server.dto.Response_UserScoreDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

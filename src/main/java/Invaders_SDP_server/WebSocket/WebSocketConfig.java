@@ -1,6 +1,6 @@
 package Invaders_SDP_server.WebSocket;
 
-import Invaders_SDP_server.User.service.GameService;
+import Invaders_SDP_server.service.GameService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

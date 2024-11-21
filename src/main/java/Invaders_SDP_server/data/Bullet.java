@@ -1,4 +1,4 @@
-package Invaders_SDP_server.User.data;
+package Invaders_SDP_server.data;
 
 import lombok.Data;
 

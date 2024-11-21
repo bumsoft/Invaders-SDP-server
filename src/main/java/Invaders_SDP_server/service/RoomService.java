@@ -1,15 +1,14 @@
-package Invaders_SDP_server.User.service;
+package Invaders_SDP_server.service;
 
-import Invaders_SDP_server.User.entity.User;
-import Invaders_SDP_server.User.entity.Room;
-import Invaders_SDP_server.User.repository.RoomRepository;
-import Invaders_SDP_server.User.repository.UserRepository;
+import Invaders_SDP_server.entity.User;
+import Invaders_SDP_server.entity.Room;
+import Invaders_SDP_server.repository.RoomRepository;
+import Invaders_SDP_server.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service

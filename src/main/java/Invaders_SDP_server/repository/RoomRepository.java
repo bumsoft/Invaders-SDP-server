@@ -1,7 +1,7 @@
-package Invaders_SDP_server.User.repository;
+package Invaders_SDP_server.repository;
 
-import Invaders_SDP_server.User.entity.Room;
-import Invaders_SDP_server.User.entity.User;
+import Invaders_SDP_server.entity.Room;
+import Invaders_SDP_server.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

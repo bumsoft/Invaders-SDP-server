@@ -1,11 +1,11 @@
-package Invaders_SDP_server.User.data;
+package Invaders_SDP_server.data;
 
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static Invaders_SDP_server.User.data.Bullet.speed;
+import static Invaders_SDP_server.data.Bullet.speed;
 
 @Getter
 @Setter

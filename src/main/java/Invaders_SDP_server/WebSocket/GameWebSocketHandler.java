@@ -1,15 +1,14 @@
 package Invaders_SDP_server.WebSocket;
 
-import Invaders_SDP_server.User.dto.BulletPositionDTO;
-import Invaders_SDP_server.User.dto.GameStateDTO;
-import Invaders_SDP_server.User.dto.PositionDTO;
-import Invaders_SDP_server.User.data.Bullet;
-import Invaders_SDP_server.User.data.Player;
-import Invaders_SDP_server.User.entity.Room;
-import Invaders_SDP_server.User.service.GameService;
-import Invaders_SDP_server.User.service.RoomService;
+import Invaders_SDP_server.dto.BulletPositionDTO;
+import Invaders_SDP_server.dto.GameStateDTO;
+import Invaders_SDP_server.dto.PositionDTO;
+import Invaders_SDP_server.data.Bullet;
+import Invaders_SDP_server.data.Player;
+import Invaders_SDP_server.entity.Room;
+import Invaders_SDP_server.service.GameService;
+import Invaders_SDP_server.service.RoomService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -18,7 +17,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -222,7 +220,7 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status){
         sessions.remove(session);
-        roomSessions.get(session)
+        roomSessions.get(session);
     }
 
 }

@@ -1,6 +1,5 @@
-package Invaders_SDP_server.User.entity;
+package Invaders_SDP_server.entity;
 
-import Invaders_SDP_server.User.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,9 +18,12 @@ public class Room {
 
     private long key;
 
-    @Column(nullable = false)
+    @OneToOne
+    @JoinColumn
     private User player1;
 
+    @OneToOne
+    @JoinColumn
     private User player2;
 
     private boolean player1Ready;

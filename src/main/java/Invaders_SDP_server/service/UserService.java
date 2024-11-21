@@ -1,10 +1,11 @@
-package Invaders_SDP_server.User.service;
+package Invaders_SDP_server.service;
 
-import Invaders_SDP_server.User.repository.UserRepository;
-import Invaders_SDP_server.User.entity.User;
-import Invaders_SDP_server.User.dto.Request_RegisterDto;
-import Invaders_SDP_server.User.dto.Response_UserScoreDto;
+import Invaders_SDP_server.repository.UserRepository;
+import Invaders_SDP_server.entity.User;
+import Invaders_SDP_server.dto.Request_RegisterDto;
+import Invaders_SDP_server.dto.Response_UserScoreDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +17,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class UserService {
+
+    @Autowired
     private final UserRepository userRepository;
+    @Autowired
     private final PasswordEncoder passwordEncoder;
 
     public User register(Request_RegisterDto requestRegisterDto)

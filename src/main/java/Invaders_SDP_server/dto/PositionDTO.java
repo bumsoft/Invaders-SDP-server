@@ -1,6 +1,6 @@
-package Invaders_SDP_server.User.dto;
+package Invaders_SDP_server.dto;
 
-import Invaders_SDP_server.User.data.Player;
+import Invaders_SDP_server.data.Player;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
