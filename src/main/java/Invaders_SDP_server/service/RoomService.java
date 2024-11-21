@@ -69,4 +69,15 @@ public class RoomService {
         roomRepository.delete(target.get());
         return target.get();
     }
+
+    @Transactional
+    public RoomStatus getRoom(String username){
+        Optional<User> player = userRepository.findByUsername(username);
+        Optional<Room> target = roomRepository.findByPlayer1(player.get());
+        if(target.isEmpty()){
+            target = roomRepository.findByPlayer2(player.get());
+            return new RoomStatus(2,target.get());
+        }
+        return new RoomStatus(1,target.get());
+    }
 }
