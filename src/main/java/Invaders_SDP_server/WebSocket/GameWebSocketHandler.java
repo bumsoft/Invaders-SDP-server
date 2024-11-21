@@ -91,7 +91,19 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 }
             }
             case "close" ->{
-
+                Room deleted = roomService.deleteRoom(parts[1]);
+                if(deleted.getPlayer1().getUsername() == parts[1]){
+                    roomSessions.get(deleted.getPlayer2().getUsername()).sendMessage(new TextMessage("GameClosed"));
+                }
+                else{
+                    roomSessions.get(deleted.getPlayer1().getUsername()).sendMessage(new TextMessage("GameClosed"));
+                }
+                roomSessions.get(deleted.getPlayer1().getUsername()).close();
+                roomSessions.get(deleted.getPlayer2().getUsername()).close();
+                sessions.remove(roomSessions.get(deleted.getPlayer1().getUsername()));
+                sessions.remove(roomSessions.get(deleted.getPlayer2().getUsername()));
+                roomSessions.remove(deleted.getPlayer1().getUsername());
+                roomSessions.remove(deleted.getPlayer2().getUsername());
             }
             default -> {
 

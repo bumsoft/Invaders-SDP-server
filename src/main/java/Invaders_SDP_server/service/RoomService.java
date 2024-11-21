@@ -58,4 +58,15 @@ public class RoomService {
             return updated;
         }
     }
+
+    @Transactional
+    public Room deleteRoom(String username){
+        Optional<User> player = userRepository.findByUsername(username);
+        Optional<Room> target = roomRepository.findByPlayer1(player.get());
+        if(target.isEmpty()){
+            target = roomRepository.findByPlayer2(player.get());
+        }
+        roomRepository.delete(target.get());
+        return target.get();
+    }
 }
