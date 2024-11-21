@@ -12,11 +12,10 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 public class UserController {
 
     @Autowired
-    private final UserService userService;
+    UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody Request_RegisterDto requestRegisterDto) {

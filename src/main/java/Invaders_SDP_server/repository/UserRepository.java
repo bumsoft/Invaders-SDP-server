@@ -10,6 +10,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
-    @Query("SELECT new Invaders_SDP_server.User.dto.Response_UserScoreDto(u.username, u.score) FROM User u ORDER BY u.score desc")
+    @Query("SELECT new Invaders_SDP_server.dto.Response_UserScoreDto(u.username, u.score) FROM User u ORDER BY u.score desc")
     List<Response_UserScoreDto> findAllUserScores();
 }
