@@ -18,7 +18,7 @@ public class MainGameController extends JPanel {
     private WebSocketClientManager webSocketClientManager;
     private DrawManager drawManager;
 
-    private final boolean[] keyStates = new boolean[256];
+    private final boolean[] keyStates = new boolean[256]; // 키 입력 저장하는 식으로 진행했는데 다른 방법 있는지..?
 
     public MainGameController() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -87,6 +87,7 @@ public class MainGameController extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        System.out.println("paintComponent called"); // 로그 작성
 
         // 배경 초기화
         g.setColor(Color.BLACK);
@@ -98,6 +99,7 @@ public class MainGameController extends JPanel {
 
     public void startGameLoop() {
         Timer timer = new Timer(16, e -> {
+            System.out.println("Game loop running..."); // 로그 작성
             moveBullets(); // 총알 이동 처리
             updateGameState(); // 게임 상태 갱신
             repaint(); // 화면 갱신
@@ -114,12 +116,18 @@ public class MainGameController extends JPanel {
             return bullet.isOutOfBounds(); // 화면 밖으로 나가면 제거
         });
 
+        // DrawManager와 동기화
+        drawManager.updatePlayerBullets(playerBullets);
+
         // 적 총알 이동 (필요하면 추가)
         List<Bullet> enemyBullets = drawManager.getEnemyPlayer().getBullets();
         enemyBullets.removeIf(bullet -> {
             bullet.updateBulletMove();
             return bullet.isOutOfBounds();
         });
+
+        // 적 총알도 DrawManager와 동기화 (필요하다면 추가)
+        drawManager.updateEnemyBullets(enemyBullets);
     }
 
     public void updateGameState() {
@@ -130,6 +138,12 @@ public class MainGameController extends JPanel {
                 drawManager.getEnemyPlayer().getX(), // 적 플레이어 X 좌표
                 drawManager.getEnemyPlayer().getY() // 적 플레이어 Y 좌표
         );
+
+        // 플레이어 및 적 총알 리스트 초기화
+        List<BulletPositionDTO> playerBullets = gameStateManager.getPlayerBullets();
+        List<BulletPositionDTO> enemyBullets = gameStateManager.getEnemyBullets();
+        if (playerBullets == null) playerBullets = new ArrayList<>();
+        if (enemyBullets == null) enemyBullets = new ArrayList<>();
 
         // 클라이언트의 현재 상태를 기반으로 GameStateDTO 생성 및 업데이트
         gameStateManager.updateGameState(new GameStateDTO(
