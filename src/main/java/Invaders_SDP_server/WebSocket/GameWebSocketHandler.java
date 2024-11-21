@@ -6,9 +6,12 @@ import Invaders_SDP_server.dto.PositionDTO;
 import Invaders_SDP_server.data.Bullet;
 import Invaders_SDP_server.data.Player;
 import Invaders_SDP_server.entity.Room;
+import Invaders_SDP_server.entity.User;
 import Invaders_SDP_server.service.GameService;
 import Invaders_SDP_server.service.RoomService;
+import Invaders_SDP_server.service.RoomService.RoomStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 // 클라이언트로부터 좌표 데이터를 수신하고, 이를 다른 클라이언트에게 전송한다(양방향 전달)
 // WebSocket 연결에서 발생하는 text메세지를 처리할 수 있게 함
 @Component
+@Slf4j
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
     // GameWebSocketHandler에서 클라이언트와 서버간의 실시간 소통 관리
@@ -35,17 +39,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // DTO을 json 형태로 변환
     final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 두명의 클라이언트를 위한 WebSocketSession session1, session2의 위치 정보를 따로 관리
-    // WebSocketSession은 클라이언트와 서버 간의 연결을 나타내는 객체 (key로 사용)
-    private WebSocketSession session1;
-    private WebSocketSession session2;
-
-
     // sessions맵 생성 - session i, player 객체 저장하여 관리
     private final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();
 
     // 방 별로 세션, 상태 관리
     private final Map<String, WebSocketSession> roomSessions = new ConcurrentHashMap<>();
+    //역맵
+    private final Map<WebSocketSession, String> rvRoomSessions = new ConcurrentHashMap<>();
 
     @Autowired
     RoomService roomService;
@@ -58,11 +58,14 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String msg = message.getPayload().toLowerCase();
+        //msg는 메서드-사용자이름형태-optional형태
+        //msg를 -기준으로 나누는 작업
         String[] parts = msg.split("-");
         switch (parts[0]) {
             case "create" -> {
                 Room created = roomService.createRoom(parts[1]);
                 roomSessions.put(created.getPlayer1().getUsername(),session);
+                rvRoomSessions.put(session,created.getPlayer1().getUsername());
                 session.sendMessage(new TextMessage("Created-"+created.getAccessCode()));
             }
             case "join" -> {
@@ -72,6 +75,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 }
                 else{
                     roomSessions.put(updated.getPlayer2().getUsername(),session);
+                    rvRoomSessions.put(session,updated.getPlayer2().getUsername());
                     session.sendMessage(new TextMessage("Joined-"+updated.getPlayer1().getUsername()));
                     roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Joined-"+updated.getPlayer2().getUsername()));
                 }
@@ -90,52 +94,61 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Ready-"+updated.getPlayer2().getUsername()));
                 }
             }
-            case "close" ->{
-                Room deleted = roomService.deleteRoom(parts[1]);
-                if(deleted.getPlayer1().getUsername() == parts[1]){
-                    roomSessions.get(deleted.getPlayer2().getUsername()).sendMessage(new TextMessage("GameClosed"));
+            // 서버로 사용자 이름과 명령 전달
+            case "shoot" -> { // 스페이스바 눌렀을 때 (총알 발사)
+                Player player = sessions.get(session);
+                RoomStatus gameRoom = roomService.getRoom(parts[1]);
+                //Room gameRoom = roomService.getRoom(parts[1]).room();
+                switch (gameRoom.player()){
+                    case 1 -> {
+                        player.shoot_Bullet(true);
+                    }
+                    case 2 -> {
+                        player.shoot_Bullet(false);
+                    }
+                    default -> {
+
+                    }
                 }
-                else{
-                    roomSessions.get(deleted.getPlayer1().getUsername()).sendMessage(new TextMessage("GameClosed"));
-                }
-                roomSessions.get(deleted.getPlayer1().getUsername()).close();
-                roomSessions.get(deleted.getPlayer2().getUsername()).close();
-                sessions.remove(roomSessions.get(deleted.getPlayer1().getUsername()));
-                sessions.remove(roomSessions.get(deleted.getPlayer2().getUsername()));
-                roomSessions.remove(deleted.getPlayer1().getUsername());
-                roomSessions.remove(deleted.getPlayer2().getUsername());
             }
-            default -> {
+            case "stopshoot" -> { // 스페이스바를 뗐을 때 (총알 발사 중지)
+                Player player = sessions.get(session);
+                RoomStatus gameRoom = roomService.getRoom(parts[1]);
+                switch (gameRoom.player()){
+                    case 1, 2 -> {
+                        player.stopShooting();
+                    }
+                    default -> {
+
+                    }
+                }
+
+            }
+            case "stop" -> { // 이동을 멈췄을 때
+                Player player = sessions.get(session);
+                RoomStatus gameRoom = roomService.getRoom(parts[1]);
+                switch (gameRoom.player()){
+                    case 1, 2 -> {
+                        player.stopMoving();
+                    }
+                    default -> {
+                        
+                    }
+                }
+
+            }
+            default -> { // a, w, s, d 키 입력으로 이동 처리
+                Player player = sessions.get(session);
+                RoomStatus gameRoom = roomService.getRoom(parts[1]);
+                switch (gameRoom.player()){
+                    case 1, 2 -> {
+                        gameService.movePlayer(player, msg);
+                    }
+                }
 
             }
         }
-            switch (msg) {
-                case "shoot" -> { // 스페이스바 눌렀을 때 (총알 발사)
-                    Player player = sessions.get(session);
-                    if (session.equals(session1)) {
-                        player.shoot_Bullet(true); // 위로 발사
-                    } else if (session.equals(session2)) {
-                        player.shoot_Bullet(false); // 아래로 발사
-                    }
-                }
-                case "stopshoot" -> { // 스페이스바를 뗐을 때 (총알 발사 중지)
-                    Player player = sessions.get(session);
-                    player.stopShooting();
-                }
-                case "stop" -> { // 이동을 멈췄을 때
-                    Player player = sessions.get(session);
-                    player.stopMoving();
-                }
-                default -> { // a, w, s, d 키 입력으로 이동 처리
-                    if (session.equals(session1) && session2 != null) {
-                        Player player1 = sessions.get(session1);
-                        gameService.movePlayer(player1, msg);
-                    } else if (session.equals(session2) && session1 != null) {
-                        Player player2 = sessions.get(session2);
-                        gameService.movePlayer(player2, msg);
-                    }
-                }
-            }
+
 
     }
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
@@ -147,8 +160,18 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     // 위치 정보 업데이트 메소드 - 양방향 동기화
     private void sendUpdatedPosition(WebSocketSession session) {
+
+        // 세션에 해당하는 Player 가져오기
         Player player = sessions.get(session);
-        Player enemyPlayer = session.equals(session1) ? sessions.get(session2) : sessions.get(session1);
+        String username = rvRoomSessions.get(session);
+
+        // roomSessions에서 적의 세션을 식별
+        RoomStatus gameRoom = roomService.getRoom(username);
+        WebSocketSession enemySession = gameRoom.player() == 1
+                ? roomSessions.get(gameRoom.room().getPlayer2().getUsername())
+                : roomSessions.get(gameRoom.room().getPlayer1().getUsername());
+
+        Player enemyPlayer = sessions.get(enemySession);
 
         // 두 클라이언트가 모두 연결된 경우
         if (player != null && enemyPlayer != null) {
@@ -179,7 +202,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
 // 총알 삭제 메소드 (총알이 상대와 충돌 혹은 화면 밖으로 나간 경우 삭제 처리)
-private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlayer){
+    private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlayer){
                 // Player의 총알이 enemyPlayer와 충돌이 났는지 확인
                 Iterator<Bullet> iterator1 = player.getBullets().iterator();
                 while (iterator1.hasNext()) {
@@ -211,28 +234,50 @@ private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlaye
         // sessions 맵에 저장
         Player newPlayer = new Player();
         sessions.put(session, newPlayer);
-
-        // 새로운 세션 할당
-        if(session1 == null){
-            session1 = session;
-        }
-        else if(session2 == null){
-            session2 = session;
-        }
-        else{
-            try{
-                session.sendMessage(new TextMessage("Game session is full. Please try again later."));
-                session.close();
-            }catch(Exception e){e.printStackTrace();}
-        }
-        return;
     }
 
     // 클라이언트가 연결을 종료한 경우
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status){
+        log.info("종료");
+        String currentUsername = rvRoomSessions.get(session);
+        String enemyUsername = "";
+        RoomStatus target = roomService.getRoom(currentUsername);
+        rvRoomSessions.remove(session);
         sessions.remove(session);
-        roomSessions.get(session);
+        roomService.deleteRoom(target.room().getPlayer1().getUsername());
+        switch(target.player()){
+            case 1 -> {
+                try{
+                    enemyUsername = target.room().getPlayer2().getUsername();
+                }
+                catch (Exception e){
+
+                }
+            }
+            case 2 -> {
+                try{
+                    enemyUsername = target.room().getPlayer1().getUsername();
+                }
+                catch (Exception e){
+
+                }
+            }
+            default -> {
+
+            }
+        }
+        try{
+            roomSessions.get(enemyUsername).sendMessage(new TextMessage("GameClosed-enemy exit"));
+            roomSessions.get(enemyUsername).close();
+            rvRoomSessions.remove(roomSessions.get(enemyUsername));
+            sessions.remove(roomSessions.get(enemyUsername));
+        }
+        catch (Exception e) {
+
+        }
+        roomSessions.remove(target.room().getPlayer1().getUsername());
+        roomSessions.remove(target.room().getPlayer2().getUsername());
     }
 
 }

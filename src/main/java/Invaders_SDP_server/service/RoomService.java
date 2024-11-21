@@ -21,6 +21,8 @@ public class RoomService {
     @Autowired
     UserRepository userRepository;
 
+    public record RoomStatus(int player, Room room) {}
+
     @Transactional
     public Room createRoom(String username){
         Optional<User> player1 = userRepository.findByUsername(username);
@@ -60,14 +62,10 @@ public class RoomService {
     }
 
     @Transactional
-    public Room deleteRoom(String username){
-        Optional<User> player = userRepository.findByUsername(username);
-        Optional<Room> target = roomRepository.findByPlayer1(player.get());
-        if(target.isEmpty()){
-            target = roomRepository.findByPlayer2(player.get());
-        }
-        roomRepository.delete(target.get());
-        return target.get();
+    public RoomStatus deleteRoom(String username){
+        RoomStatus target = getRoom(username);
+        roomRepository.delete(target.room);
+        return target;
     }
 
     @Transactional
