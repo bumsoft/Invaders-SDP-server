@@ -1,4 +1,4 @@
-package Invaders_SDP_server.User.domain;
+package Invaders_SDP_server.User.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package Invaders_SDP_server.SpringSecurity;
 
 import Invaders_SDP_server.User.repository.UserRepository;
-import Invaders_SDP_server.User.domain.User;
+import Invaders_SDP_server.User.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
