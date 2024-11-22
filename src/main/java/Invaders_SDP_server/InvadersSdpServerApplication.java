@@ -11,5 +11,4 @@ public class InvadersSdpServerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(InvadersSdpServerApplication.class, args);
 	}
- ////
 }

@@ -16,14 +16,14 @@ public class GameService {
     // 입력 키에 따른 위치 정보 업데이트 - 화면을 벗어나는 경우 예외처리 필요!!!
     public void movePlayer(Player player, String msg){
         int x = player.getX();
-        int y = player.getY();
-
         switch(msg){
             case "left":
-                player.setX(x-10);
+                if(x-10 >0)
+                    player.setX(x-10);
                 break;
             case "right":
-                player.setX(x+10);
+                if(x+10 < 600)
+                    player.setX(x+10);
                 break;
         }
     }

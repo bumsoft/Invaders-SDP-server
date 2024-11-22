@@ -11,4 +11,6 @@ public interface RoomRepository extends JpaRepository <Room,Long> {
     Room findByAccessCode(long key);
     Optional<Room> findByPlayer1(User player1);
     Optional<Room> findByPlayer2(User player2);
+
+    void removeById(Long roomId);
 }

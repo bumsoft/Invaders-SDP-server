@@ -1,28 +1,24 @@
 package Invaders_SDP_server.WebSocket;
 
-import Invaders_SDP_server.dto.BulletPositionDTO;
-import Invaders_SDP_server.dto.GameStateDTO;
 import Invaders_SDP_server.dto.PositionDTO;
 import Invaders_SDP_server.data.Bullet;
 import Invaders_SDP_server.data.Player;
 import Invaders_SDP_server.entity.Room;
-import Invaders_SDP_server.entity.User;
+import Invaders_SDP_server.repository.RoomRepository;
 import Invaders_SDP_server.service.GameService;
 import Invaders_SDP_server.service.RoomService;
-import Invaders_SDP_server.service.RoomService.RoomStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 // 클라이언트로부터 좌표 데이터를 수신하고, 이를 다른 클라이언트에게 전송한다(양방향 전달)
 // WebSocket 연결에서 발생하는 text메세지를 처리할 수 있게 함
@@ -34,22 +30,22 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // 게임의 상태를 관리하는 GameService - 플레이어가 이동할 때 위치를 업데이트(movePlayer 메소드 내포)
     private final GameService gameService;
 
-    // DTO을 json 형태로 변환
     final ObjectMapper objectMapper = new ObjectMapper();
 
-    // sessions맵 생성 - session i, player 객체 저장하여 관리
+    //연결된 모든 세션: sessions맵 생성 - session, player 객체 저장하여 관리
     private final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();
 
-    //방 세션모음
+    //게임중인 방 세션모음, Long은 RoomId임
     private Map<Long, Set<WebSocketSession>> activeRoom = new ConcurrentHashMap<>();
 
-    // 방 별로 세션, 상태 관리
-    private final Map<String, WebSocketSession> roomSessions = new ConcurrentHashMap<>();
-    //역맵
-    private final Map<WebSocketSession, String> rvRoomSessions = new ConcurrentHashMap<>();
+    //대기중인 방 세션모음
+    private Map<Long, Set<WebSocketSession>> waitingRoom = new ConcurrentHashMap<>();
+
 
     @Autowired
     RoomService roomService;
+    @Autowired
+    private RoomRepository roomRepository;
 
     // 생성자 - GameService에 의존함
     @Autowired
@@ -65,151 +61,137 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         switch (parts[0]) {
             case "create" -> {
                 Room created = roomService.createRoom(parts[1]);
-                roomSessions.put(created.getPlayer1().getUsername(),session);
-                rvRoomSessions.put(session,created.getPlayer1().getUsername());
-                session.sendMessage(new TextMessage("Created-"+created.getAccessCode()));
+                if(created != null)
+                {
+                    Set<WebSocketSession> set = new HashSet();
+                    set.add(session);
+                    waitingRoom.put(created.getId(), set);
+
+                    Player player = sessions.get(session);
+                    player.setDirection(true); //방장은 아래서 시작.
+                    session.sendMessage(new TextMessage("Created-" + created.getAccessCode()));
+                }
+                else //username이 없는 경우
+                {
+                    session.sendMessage(new TextMessage("ERROR-cannot find user"));
+                    session.close(CloseStatus.SERVER_ERROR);
+                }
             }
             case "join" -> {
-                Room updated = roomService.joinRoom(parts[1],Long.parseLong(parts[2]));
-                if(updated == null){
-                    session.sendMessage(new TextMessage("JoinedFailed-Full"));
+                Room joinedRoom = roomService.joinRoom(parts[1],Long.parseLong(parts[2]));
+                if(joinedRoom != null)
+                {
+                    waitingRoom.get(joinedRoom.getId()).add(session);
+
+                    for(WebSocketSession ses : waitingRoom.get(joinedRoom.getId()))
+                    {
+                        ses.sendMessage(new TextMessage("Joined-"+joinedRoom.getPlayer1().getUsername()+"-"+joinedRoom.getPlayer2().getUsername()));
+                    }//Joined-username1-username2반환(순서 상관x. 클라에서 처리하겠음)
                 }
-                else{
-                    roomSessions.put(updated.getPlayer2().getUsername(),session);
-                    rvRoomSessions.put(session,updated.getPlayer2().getUsername());
-                    session.sendMessage(new TextMessage("Joined-"+updated.getPlayer1().getUsername()));
-                    roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Joined-"+updated.getPlayer2().getUsername()));
+                else //조인실패
+                {
+                    session.sendMessage(new TextMessage("ERROR-cannot join room"));
                 }
             }
             case "ready" -> {
-                Room updated = roomService.playerReady(parts[1]);
-                if(updated.isPlayer1Ready() && updated.isPlayer2Ready()){
-                    //둘다 레디일때
-                    roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Start"));
-                    roomSessions.get(updated.getPlayer2().getUsername()).sendMessage(new TextMessage("Start"));
-
-                    Set<WebSocketSession> set = new HashSet();
-                    set.add(roomSessions.get(updated.getPlayer1().getUsername()));
-                    set.add( roomSessions.get(updated.getPlayer2().getUsername()));
-                    activeRoom.put(updated.getId(), set);
-
-
-                }
-                else if(updated.isPlayer1Ready()){
-                    roomSessions.get(updated.getPlayer2().getUsername()).sendMessage(new TextMessage("Ready-"+updated.getPlayer1().getUsername()));
-                }
-                else {
-                    roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Ready-"+updated.getPlayer2().getUsername()));
+                Room room = roomService.playerReady(parts[1]);
+                if(room != null)
+                {
+                    if (room.isPlayer1Ready() && room.isPlayer2Ready())
+                    {//둘다 레디일때
+                        Set<WebSocketSession> set = waitingRoom.get(room.getId());
+                        for (WebSocketSession ses : set)
+                        {
+                            ses.sendMessage(new TextMessage("Start"));
+                        }
+                        activeRoom.put(room.getId(), set); //실행방추가
+                        waitingRoom.remove(room.getId()); //대기방 삭제
+                    }
                 }
             }
-            // 서버로 사용자 이름과 명령 전달
             case "shoot" -> { // 스페이스바 눌렀을 때 (총알 발사)
                 Player player = sessions.get(session);
-                RoomStatus gameRoom = roomService.getRoom(parts[1]);
-                //Room gameRoom = roomService.getRoom(parts[1]).room();
-                switch (gameRoom.player()){
-                    case 1 -> {
-                        player.shoot_Bullet(true);
-                    }
-                    case 2 -> {
-                        player.shoot_Bullet(false);
-                    }
-                    default -> {
-
-                    }
-                }
+                player.shoot_Bullet();
             }
-            case "stopshoot" -> { // 스페이스바를 뗐을 때 (총알 발사 중지)
+            default -> { //LEFT RIGHT 이동 처리
                 Player player = sessions.get(session);
-                RoomStatus gameRoom = roomService.getRoom(parts[1]);
-                switch (gameRoom.player()){
-                    case 1, 2 -> {
-                        player.stopShooting();
-                    }
-                    default -> {
-
-                    }
-                }
-
-            }
-            case "stop" -> { // 이동을 멈췄을 때
-                Player player = sessions.get(session);
-                RoomStatus gameRoom = roomService.getRoom(parts[1]);
-                switch (gameRoom.player()){
-                    case 1, 2 -> {
-                        player.stopMoving();
-                    }
-                    default -> {
-                        
-                    }
-                }
-
-            }
-            default -> { // a, w, s, d 키 입력으로 이동 처리
-                Player player = sessions.get(session);
-                RoomStatus gameRoom = roomService.getRoom(parts[1]);
-                switch (gameRoom.player()){
-                    case 1, 2 -> {
-                        gameService.movePlayer(player, parts[0]);
-                    }
-                }
-
+                gameService.movePlayer(player, parts[0]);
             }
         }
 
 
     }
+    @Scheduled(fixedRate = 1000) //1초마다 유효하지 않은 대기방, 실행방, 엔티티 삭제
+    @Transactional
+    public void removeClosedSession()
+    {
+        for(Long roomId : activeRoom.keySet())
+        {
+            Set<WebSocketSession> set = activeRoom.get(roomId);
+            for(WebSocketSession ses : set)
+            {
+                if(!sessions.containsKey(ses))
+                {
+                    activeRoom.remove(roomId);
+                    roomRepository.removeById(roomId);
+                }
+            }
+        }
+        for(Long roomId : waitingRoom.keySet())
+        {
+            Set<WebSocketSession> set = waitingRoom.get(roomId);
+            for(WebSocketSession ses : set)
+            {
+                if(!sessions.containsKey(ses))
+                {
+                    waitingRoom.remove(roomId);
+                    roomRepository.removeById(roomId);
+                }
+            }
+        }
+    }
 
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
-    @Scheduled(fixedRate = 10) // 0.01초마다 서버가 클라이언트에게 정보 전송
+    @Scheduled(fixedRate = 16) //60FPS기준 16ms마다 갱신필요 필요
     public void sendUpdatedPositionToAll(){
 
         for (Set<WebSocketSession> sessions : activeRoom.values()) {
             //세션들(2개) 가져오기
-            WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[2]);
+            WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[0]); //0으로 해두면 알아서.
             sendUpdatedPosition(sessionArray[0], sessionArray[1]);
-
         }
-        System.out.println("sendUpdatedPositionToAll");
     }
 
     // 위치 정보 업데이트 메소드 - 양방향 동기화
     private void sendUpdatedPosition(WebSocketSession session1, WebSocketSession session2) {
 
         // 세션에 해당하는 Player 가져오기
-        Player player1 = sessions.get(session1);
-        Player player2 = sessions.get(session2);
+        try
+        {
+            Player player1 = sessions.get(session1);
+            Player player2 = sessions.get(session2);
 
-
-        // 두 클라이언트가 모두 연결된 경우
-        if (player1 != null && player2 != null) {
-            // Player의 위치 DTO 생성
+            //위치 DTO 생성
             PositionDTO positionDTO1 = new PositionDTO(player1, player2);
-            //
             PositionDTO positionDTO2 = new PositionDTO(player2, player1);
 
-            // Player의 총알 위치를 BulletPositionDTO로 변환
-            //List<BulletPositionDTO> playerBullets = player1.getBullets().stream().map
-            //        (bullet -> new BulletPositionDTO(bullet.getX(), bullet.getY(), bullet.isDirection())).collect(Collectors.toList());
-
-            // EnemyPlayer의 총알 위치를 BulletPositionDTO로 변환
-            //List<BulletPositionDTO> enemyBullets = player2.getBullets().stream().map(
-            //        bullet -> new BulletPositionDTO(bullet.getX(), bullet.getY(), bullet.isDirection())).collect(Collectors.toList());
-
-            // player, enemyPlayer의 위치, 각 player의 bullet의 위치 정보 모두 내포
-            //GameStateDTO gameStateDTO = new GameStateDTO(positionDTO1, playerBullets, enemyBullets);
-
-            try {
+            try
+            {
                 // DTO를 json으로
                 String json1 = objectMapper.writeValueAsString(positionDTO1);
                 String json2 = objectMapper.writeValueAsString(positionDTO2);
 
-                session1.sendMessage(new TextMessage("UPDATE-"+json1));
-                session2.sendMessage(new TextMessage("UPDATE-"+json2));
+                session1.sendMessage(new TextMessage("UPDATE-" + json1));
+                session2.sendMessage(new TextMessage("UPDATE-" + json2));
 
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception e)
+            {
+                log.info(e.getMessage());
+                log.info("Error parsing positionDTO");
             }
+        }catch(NullPointerException e){
+            log.info("종료된세션에 대한 처리");
+            return;
         }
     }
 
@@ -250,49 +232,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     // 클라이언트가 연결을 종료한 경우
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status){
-        log.info("종료");
-        String currentUsername = rvRoomSessions.get(session);
-        String enemyUsername = "";
-        RoomStatus target = roomService.getRoom(currentUsername);
-
-        activeRoom.remove(target.room().getId()); // 활성된룸 삭제
-        rvRoomSessions.remove(session);
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status)
+    {
+        log.info("클라이언트에서 연결을 종료함");
         sessions.remove(session);
-        roomService.deleteRoom(target.room().getPlayer1().getUsername());
-        switch(target.player()){
-            case 1 -> {
-                try{
-                    enemyUsername = target.room().getPlayer2().getUsername();
-                }
-                catch (Exception e){
-
-                }
-            }
-            case 2 -> {
-                try{
-                    enemyUsername = target.room().getPlayer1().getUsername();
-                }
-                catch (Exception e){
-
-                }
-            }
-            default -> {
-
-            }
-        }
-        try{
-            roomSessions.get(enemyUsername).sendMessage(new TextMessage("GameClosed-enemy exit"));
-            roomSessions.get(enemyUsername).close();
-            rvRoomSessions.remove(roomSessions.get(enemyUsername));
-            sessions.remove(roomSessions.get(enemyUsername));
-        }
-        catch (Exception e) {
-
-        }
-        roomSessions.remove(target.room().getPlayer1().getUsername());
-        roomSessions.remove(target.room().getPlayer2().getUsername());
     }
-
 }
 
