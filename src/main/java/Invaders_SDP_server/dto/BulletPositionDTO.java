@@ -13,5 +13,4 @@ public class BulletPositionDTO {
 
     private int bulletX;
     private int bulletY;
-    private boolean direction;
 }

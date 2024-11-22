@@ -1,5 +1,6 @@
 package Invaders_SDP_server.WebSocket;
 
+import Invaders_SDP_server.dto.GameStateDTO;
 import Invaders_SDP_server.dto.PositionDTO;
 import Invaders_SDP_server.data.Bullet;
 import Invaders_SDP_server.data.Player;
@@ -102,6 +103,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                         Set<WebSocketSession> set = waitingRoom.get(room.getId());
                         for (WebSocketSession ses : set)
                         {
+                            Player player = sessions.get(ses);
+                            player.setY(player.isDirection()?600:50);
                             ses.sendMessage(new TextMessage("Start"));
                         }
                         activeRoom.put(room.getId(), set); //실행방추가
@@ -151,8 +154,23 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    //총알위치 업뎃. 충돌처리도 여기서 할 것
+    @Scheduled(fixedRate = 300)
+    public void update()
+    {
+        for (Set<WebSocketSession> sessions : activeRoom.values())
+        {
+            //세션들(2개) 가져오기
+            WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[0]); //0으로 해두면 알아서.
+            Player player1 = this.sessions.get(sessionArray[0]);
+            Player player2 = this.sessions.get(sessionArray[1]);
+            gameService.moveBullets(player1);
+            gameService.moveBullets(player2);
+        }
+    }
+
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
-    @Scheduled(fixedRate = 16) //60FPS기준 16ms마다 갱신필요 필요
+    @Scheduled(fixedRate = 300) //60FPS기준 16ms마다 갱신필요 필요
     public void sendUpdatedPositionToAll(){
 
         for (Set<WebSocketSession> sessions : activeRoom.values()) {
@@ -171,15 +189,29 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             Player player1 = sessions.get(session1);
             Player player2 = sessions.get(session2);
 
-            //위치 DTO 생성
-            PositionDTO positionDTO1 = new PositionDTO(player1, player2);
-            PositionDTO positionDTO2 = new PositionDTO(player2, player1);
 
+            GameStateDTO gameStateDTO1 = GameStateDTO.builder()
+                    .player1X(player1.getX())
+                    .player1Y(player1.getY())
+                    .player1BulletPositionDTO(player1.getDTO())
+                    .player2X(player2.getX())
+                    .player2Y(player2.getY())
+                    .player2BulletPositionDTO(player2.getDTO())
+                    .build();
+
+            GameStateDTO gameStateDTO2 = GameStateDTO.builder()
+                    .player1X(player2.getX())
+                    .player1Y(player2.getY())
+                    .player1BulletPositionDTO(gameStateDTO1.getPlayer2BulletPositionDTO())
+                    .player2X(player1.getX())
+                    .player2Y(player1.getY())
+                    .player2BulletPositionDTO(gameStateDTO1.getPlayer1BulletPositionDTO())
+                    .build();
             try
             {
                 // DTO를 json으로
-                String json1 = objectMapper.writeValueAsString(positionDTO1);
-                String json2 = objectMapper.writeValueAsString(positionDTO2);
+                String json1 = objectMapper.writeValueAsString(gameStateDTO1);
+                String json2 = objectMapper.writeValueAsString(gameStateDTO2);
 
                 session1.sendMessage(new TextMessage("UPDATE-" + json1));
                 session2.sendMessage(new TextMessage("UPDATE-" + json2));
@@ -197,26 +229,26 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
 // 총알 삭제 메소드 (총알이 상대와 충돌 혹은 화면 밖으로 나간 경우 삭제 처리)
     private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlayer){
-                // Player의 총알이 enemyPlayer와 충돌이 났는지 확인
-                Iterator<Bullet> iterator1 = player.getBullets().iterator();
-                while (iterator1.hasNext()) {
-                    Bullet bullet = iterator1.next();
-                    // 충돌 혹은 화면 밖으로 나가면 삭제
-                    if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) {
-                        iterator1.remove();
-                    }
-                }
-
-                // Player2의 총알이 PLayer1과 충돌이 났는지 확인
-                Iterator<Bullet> iterator2 = enemyPlayer.getBullets().iterator();
-                while (iterator2.hasNext()) {
-                    Bullet bullet = iterator2.next();
-                    // 충돌 혹은 화면 밖으로 나가면 삭제
-                    if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) { // 충돌 났으면 제거
-                        iterator2.remove();
-                    }
+            // Player의 총알이 enemyPlayer와 충돌이 났는지 확인
+            Iterator<Bullet> iterator1 = player.getBullets().iterator();
+            while (iterator1.hasNext()) {
+                Bullet bullet = iterator1.next();
+                // 충돌 혹은 화면 밖으로 나가면 삭제
+                if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) {
+                    iterator1.remove();
                 }
             }
+
+            // Player2의 총알이 PLayer1과 충돌이 났는지 확인
+            Iterator<Bullet> iterator2 = enemyPlayer.getBullets().iterator();
+            while (iterator2.hasNext()) {
+                Bullet bullet = iterator2.next();
+                // 충돌 혹은 화면 밖으로 나가면 삭제
+                if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) { // 충돌 났으면 제거
+                    iterator2.remove();
+                }
+            }
+    }
 
 
 

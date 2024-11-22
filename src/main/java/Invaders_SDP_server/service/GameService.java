@@ -5,8 +5,11 @@ package Invaders_SDP_server.service;
 // 수신된 방향 정보를 통해 어느 방향으로 얼만큼 이동할지 결정하고, 이를 gameservice로 전달하여
 // 위치를 업데이트
 
+import Invaders_SDP_server.data.Bullet;
 import Invaders_SDP_server.data.Player;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 // Service 클래스에서는 각 플레이어의 위치 업데이트와 조회 수행
@@ -25,6 +28,25 @@ public class GameService {
                 if(x+10 < 600)
                     player.setX(x+10);
                 break;
+        }
+    }
+
+    public void moveBullets(Player player)
+    {
+        List<Bullet> bullets = player.getBullets();
+        if(player.isDirection()) //위로
+        {
+            for(Bullet bullet : bullets)
+            {
+                bullet.setY(bullet.getY()-5);
+            }
+        }
+        else//아래로
+        {
+            for(Bullet bullet : bullets)
+            {
+                bullet.setY(bullet.getY()+5);
+            }
         }
     }
 }
