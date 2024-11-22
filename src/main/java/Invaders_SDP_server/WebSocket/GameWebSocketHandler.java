@@ -20,9 +20,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -41,6 +39,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     // sessions맵 생성 - session i, player 객체 저장하여 관리
     private final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();
+
+    //방 세션모음
+    private Map<Long, Set<WebSocketSession>> activeRoom = new ConcurrentHashMap<>();
 
     // 방 별로 세션, 상태 관리
     private final Map<String, WebSocketSession> roomSessions = new ConcurrentHashMap<>();
@@ -86,6 +87,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     //둘다 레디일때
                     roomSessions.get(updated.getPlayer1().getUsername()).sendMessage(new TextMessage("Start"));
                     roomSessions.get(updated.getPlayer2().getUsername()).sendMessage(new TextMessage("Start"));
+
+                    Set<WebSocketSession> set = new HashSet();
+                    set.add(roomSessions.get(updated.getPlayer1().getUsername()));
+                    set.add( roomSessions.get(updated.getPlayer1().getUsername()));
+                    activeRoom.put(updated.getId(), set);
+
+
                 }
                 else if(updated.isPlayer1Ready()){
                     roomSessions.get(updated.getPlayer2().getUsername()).sendMessage(new TextMessage("Ready-"+updated.getPlayer1().getUsername()));
@@ -154,13 +162,18 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
     @Scheduled(fixedRate = 1000) // 1초마다 서버가 클라이언트에게 정보 전송
     public void sendUpdatedPositionToAll(){
-        sessions.keySet().forEach(this::sendUpdatedPosition);
 
+        for (Set<WebSocketSession> sessions : activeRoom.values()) {
+            //세션들(2개) 가져오기
+            WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[0]);
+            sendUpdatedPosition(sessionArray[0], sessionArray[1]);
+
+        }
         System.out.println("sendUpdatedPositionToAll");
     }
 
     // 위치 정보 업데이트 메소드 - 양방향 동기화
-    private void sendUpdatedPosition(WebSocketSession session) {
+    private void sendUpdatedPosition(WebSocketSession session1, WebSocketSession session2) {
 
         // 세션에 해당하는 Player 가져오기
         Player player = sessions.get(session);
@@ -244,6 +257,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String currentUsername = rvRoomSessions.get(session);
         String enemyUsername = "";
         RoomStatus target = roomService.getRoom(currentUsername);
+
+        activeRoom.remove(target.room().getId()); // 활성된룸 삭제
         rvRoomSessions.remove(session);
         sessions.remove(session);
         roomService.deleteRoom(target.room().getPlayer1().getUsername());
