@@ -36,17 +36,6 @@ public class Player {
         // 발사 중단 로직 필요 시 작성
     }
 
-    // 이동 메서드
-    public void move(String direction) {
-        isMoving = true;
-        // 이동 로직
-        switch (direction.toLowerCase()) {
-            case "a" -> x -= speed; // 왼쪽 이동
-            case "d" -> x += speed; // 오른쪽 이동
-            case "w" -> y -= speed; // 위로 이동
-            case "s" -> y += speed; // 아래로 이동
-        }
-    }
 
     // 이동을 멈추는 메서드
     public void stopMoving() {

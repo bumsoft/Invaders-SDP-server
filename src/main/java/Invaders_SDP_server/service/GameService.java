@@ -20,10 +20,10 @@ public class GameService {
 
         switch(msg){
             case "left":
-                player.setX(x-2);
+                player.setX(x-10);
                 break;
             case "right":
-                player.setX(x+2);
+                player.setX(x+10);
                 break;
         }
     }

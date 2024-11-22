@@ -90,7 +90,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                     Set<WebSocketSession> set = new HashSet();
                     set.add(roomSessions.get(updated.getPlayer1().getUsername()));
-                    set.add( roomSessions.get(updated.getPlayer1().getUsername()));
+                    set.add( roomSessions.get(updated.getPlayer2().getUsername()));
                     activeRoom.put(updated.getId(), set);
 
 
@@ -159,13 +159,14 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
 
     }
+
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
-    @Scheduled(fixedRate = 1000) // 1초마다 서버가 클라이언트에게 정보 전송
+    @Scheduled(fixedRate = 10) // 0.01초마다 서버가 클라이언트에게 정보 전송
     public void sendUpdatedPositionToAll(){
 
         for (Set<WebSocketSession> sessions : activeRoom.values()) {
             //세션들(2개) 가져오기
-            WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[0]);
+            WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[2]);
             sendUpdatedPosition(sessionArray[0], sessionArray[1]);
 
         }
@@ -176,38 +177,35 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private void sendUpdatedPosition(WebSocketSession session1, WebSocketSession session2) {
 
         // 세션에 해당하는 Player 가져오기
-        Player player = sessions.get(session);
-        String username = rvRoomSessions.get(session);
+        Player player1 = sessions.get(session1);
+        Player player2 = sessions.get(session2);
 
-        // roomSessions에서 적의 세션을 식별
-        RoomStatus gameRoom = roomService.getRoom(username);
-        WebSocketSession enemySession = gameRoom.player() == 1
-                ? roomSessions.get(gameRoom.room().getPlayer2().getUsername())
-                : roomSessions.get(gameRoom.room().getPlayer1().getUsername());
-
-        Player enemyPlayer = sessions.get(enemySession);
 
         // 두 클라이언트가 모두 연결된 경우
-        if (player != null && enemyPlayer != null) {
+        if (player1 != null && player2 != null) {
             // Player의 위치 DTO 생성
-            PositionDTO positionDTO = new PositionDTO(player, enemyPlayer);
+            PositionDTO positionDTO1 = new PositionDTO(player1, player2);
+            //
+            PositionDTO positionDTO2 = new PositionDTO(player2, player1);
 
             // Player의 총알 위치를 BulletPositionDTO로 변환
-            List<BulletPositionDTO> playerBullets = player.getBullets().stream().map
-                    (bullet -> new BulletPositionDTO(bullet.getX(), bullet.getY(), bullet.isDirection())).collect(Collectors.toList());
+            //List<BulletPositionDTO> playerBullets = player1.getBullets().stream().map
+            //        (bullet -> new BulletPositionDTO(bullet.getX(), bullet.getY(), bullet.isDirection())).collect(Collectors.toList());
 
             // EnemyPlayer의 총알 위치를 BulletPositionDTO로 변환
-            List<BulletPositionDTO> enemyBullets = enemyPlayer.getBullets().stream().map(
-                    bullet -> new BulletPositionDTO(bullet.getX(), bullet.getY(), bullet.isDirection())).collect(Collectors.toList());
+            //List<BulletPositionDTO> enemyBullets = player2.getBullets().stream().map(
+            //        bullet -> new BulletPositionDTO(bullet.getX(), bullet.getY(), bullet.isDirection())).collect(Collectors.toList());
 
             // player, enemyPlayer의 위치, 각 player의 bullet의 위치 정보 모두 내포
-            GameStateDTO gameStateDTO = new GameStateDTO(positionDTO, playerBullets, enemyBullets);
+            //GameStateDTO gameStateDTO = new GameStateDTO(positionDTO1, playerBullets, enemyBullets);
 
             try {
                 // DTO를 json으로
-                String json = objectMapper.writeValueAsString(positionDTO);
+                String json1 = objectMapper.writeValueAsString(positionDTO1);
+                String json2 = objectMapper.writeValueAsString(positionDTO2);
 
-                session.sendMessage(new TextMessage("UPDATE-"+json));
+                session1.sendMessage(new TextMessage("UPDATE-"+json1));
+                session2.sendMessage(new TextMessage("UPDATE-"+json2));
 
             } catch (Exception e) {
                 e.printStackTrace();
