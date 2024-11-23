@@ -167,15 +167,29 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             gameService.moveBullets(player1);
             gameService.moveBullets(player2);
 
-            // 충돌 감지 및 처리
-            if (gameService.checkCollision(player1, player2.getBullets())) {
-                gameService.handleGameOver(player1); // Player1 종료 처리
+            try {
+                if (isPlayer1Over(player1, player2)) {
+                    try {
+                        sessionArray[0].sendMessage(new TextMessage("GAMEOVER-LOSE"));
+                        sessionArray[1].sendMessage(new TextMessage("GAMEOVER-WIN"));
+                    } catch (Exception e) {
+                        log.error("Error sending game over message for Player 1", e);
+                    }
+                    break;
+                }
+                if (isPlayer2Over(player1, player2)) {
+                    try {
+                        sessionArray[0].sendMessage(new TextMessage("GAMEOVER-WIN"));
+                        sessionArray[1].sendMessage(new TextMessage("GAMEOVER-LOSE"));
+                    } catch (Exception e) {
+                        log.error("Error sending game over message for Player 2", e);
+                    }
+                    break;
+                }
+            } catch (Exception e) {
+                log.error("Error during collision detection", e);
             }
-            if (gameService.checkCollision(player2, player1.getBullets())) {
-                gameService.handleGameOver(player2); // Player2 종료 처리
-            }
-            // 총알 삭제 (화면 밖 및 충돌)
-            removeOffScreenAndCollidingBullets(player1, player2);
+
         }
     }
 
@@ -237,8 +251,18 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // Player1이 충돌했는지 확인
+    private boolean isPlayer1Over(Player player1, Player player2) {
+        return gameService.checkCollision(player1, player2.getBullets());
+    }
+
+    // Player2가 충돌했는지 확인
+    private boolean isPlayer2Over(Player player1, Player player2) {
+        return gameService.checkCollision(player2, player1.getBullets());
+    }
+
 // 총알 삭제 메소드 (총알이 상대와 충돌 혹은 화면 밖으로 나간 경우 삭제 처리)
-    private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlayer){
+    /*private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlayer){
             // Player의 총알이 enemyPlayer와 충돌이 났는지 확인
             Iterator<Bullet> iterator1 = player.getBullets().iterator();
             while (iterator1.hasNext()) {
@@ -258,7 +282,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     iterator2.remove();
                 }
             }
-    }
+    } */
 
 
 

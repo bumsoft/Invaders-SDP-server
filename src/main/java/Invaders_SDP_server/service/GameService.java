@@ -17,14 +17,6 @@ import java.util.List;
 @Service
 public class GameService {
 
-    // WebSocket 메시지를 전송하기 위한 템플릿
-    private final SimpMessagingTemplate messagingTemplate;
-
-    // SimpMessagingTemplate을 통해 WebSocket 메시지 전송
-    public GameService(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
-    }
-
     // 입력 키에 따른 위치 정보 업데이트 - 화면을 벗어나는 경우 예외처리 필요!!!
     public void movePlayer(Player player, String msg){
         int x = player.getX();
@@ -89,19 +81,8 @@ public class GameService {
     return false;
     }
 
-    // 충돌 발생 시 게임 종료 로직
-    public void handleGameOver(Player player) {
-        System.out.println("Game Over for player: " + player.getUsername());
-
-        // WebSocket을 통해 게임 종료 메시지 전송
-        String message = "Game Over for player: " + player.getUsername();
-        messagingTemplate.convertAndSend("/topic/game-over", message);
-
-        // 추가 작업: 필요 시 게임 상태 초기화 또는 데이터 저장
-    }
-
     // 게임 업데이트 메서드
-    public void updateGame(Player player1, Player player2, List<Bullet> player1Bullets, List<Bullet> player2Bullets) {
+    /* public void updateGame(Player player1, Player player2, List<Bullet> player1Bullets, List<Bullet> player2Bullets) {
         // 각 플레이어의 총알 이동 업데이트
         moveBullets(player1);
         moveBullets(player2);
@@ -114,6 +95,11 @@ public class GameService {
         if (checkCollision(player2, player1Bullets)) {
             handleGameOver(player2); // Player2 충돌 처리
         }
+    } */
+
+    // 게임 종료 처리
+    public void handleGameOver(Player player) {
+        System.out.println("Game Over for player: " + player.getUsername());
     }
 
 }
