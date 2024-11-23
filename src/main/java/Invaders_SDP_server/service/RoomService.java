@@ -46,7 +46,7 @@ public class RoomService {
 
     /**
      *
-     * @return P2가 참가한 상태의 Room or null if 이미 누가 참가한 방이거나, 참가하는 유저정보가 없을 시.
+     * @return P2가 참가한 상태의 Room or null if 이미 누가 참가한 방이거나, 참가하는 유저정보가 없거나 없는 방일시
      */
     @Transactional
     public Room joinRoom(String player2Name, long joinKey)
@@ -55,6 +55,7 @@ public class RoomService {
         if (player2.isPresent())
         {
             Room target = roomRepository.findByAccessCode(joinKey);
+            if(target==null) return null;
             if (target.getPlayer2() == null)
             {
                 Room updateRoom = Room.builder().
