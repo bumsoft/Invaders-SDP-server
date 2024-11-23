@@ -1,8 +1,6 @@
 package Invaders_SDP_server.WebSocket;
 
 import Invaders_SDP_server.dto.GameStateDTO;
-import Invaders_SDP_server.dto.PositionDTO;
-import Invaders_SDP_server.data.Bullet;
 import Invaders_SDP_server.data.Player;
 import Invaders_SDP_server.entity.Room;
 import Invaders_SDP_server.repository.RoomRepository;

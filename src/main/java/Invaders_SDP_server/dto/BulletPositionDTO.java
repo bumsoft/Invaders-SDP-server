@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class BulletPositionDTO {
 
-    private int bulletX;
-    private int bulletY;
+    private int bX; // bulletX
+    private int bY; // bulletY
 }

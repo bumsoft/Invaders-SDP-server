@@ -12,11 +12,11 @@ import java.util.List;
 @Builder
 public class GameStateDTO {
 
-    private int player1X;
-    private int player1Y;
-    private List<BulletPositionDTO> player1BulletPositionDTO;
+    private int p1X; // player1X
+    private int p1Y; // player1Y
+    private List<BulletPositionDTO> p1b;
 
-    private int player2X;
-    private int player2Y;
-    private List<BulletPositionDTO> player2BulletPositionDTO;
+    private int p2X;
+    private int p2Y;
+    private List<BulletPositionDTO> p2b;
 }
