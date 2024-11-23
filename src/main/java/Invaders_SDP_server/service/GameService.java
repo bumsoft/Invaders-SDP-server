@@ -52,14 +52,14 @@ public class GameService {
         {
             for(Bullet bullet : bullets)
             {
-                bullet.setY(bullet.getY()-10);
+                bullet.setY(bullet.getY()-20);
             }
         }
         else//아래로
         {
             for(Bullet bullet : bullets)
             {
-                bullet.setY(bullet.getY()+10);
+                bullet.setY(bullet.getY()+20);
             }
         }
     }
