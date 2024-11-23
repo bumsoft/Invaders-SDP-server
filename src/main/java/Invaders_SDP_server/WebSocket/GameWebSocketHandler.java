@@ -264,21 +264,21 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
 
                 GameStateDTO gameStateDTO1 = GameStateDTO.builder()
-                        .player1X(player1.getX())
-                        .player1Y(player1.getY())
-                        .player1BulletPositionDTO(player1.getDTO())
-                        .player2X(player2.getX())
-                        .player2Y(player2.getY())
-                        .player2BulletPositionDTO(player2.getDTO())
+                        .p1X(player1.getX())
+                        .p1Y(player1.getY())
+                        .p1b(player1.getDTO())
+                        .p2X(player2.getX())
+                        .p2Y(player2.getY())
+                        .p2b(player2.getDTO())
                         .build();
 
                 GameStateDTO gameStateDTO2 = GameStateDTO.builder()
-                        .player1X(player2.getX())
-                        .player1Y(player2.getY())
-                        .player1BulletPositionDTO(gameStateDTO1.getPlayer2BulletPositionDTO())
-                        .player2X(player1.getX())
-                        .player2Y(player1.getY())
-                        .player2BulletPositionDTO(gameStateDTO1.getPlayer1BulletPositionDTO())
+                        .p1X(player2.getX())
+                        .p1Y(player2.getY())
+                        .p1b(gameStateDTO1.getP2b())
+                        .p2X(player1.getX())
+                        .p2Y(player1.getY())
+                        .p2b(gameStateDTO1.getP1b())
                         .build();
                 try
                 {
