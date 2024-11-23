@@ -2,6 +2,8 @@ package Invaders_SDP_server.data;
 
 import lombok.Data;
 
+import java.awt.*;
+
 @Data
 // 서버에서 총알 관리 (Player 와는 독립적으로 작성)
 public class Bullet {
@@ -9,6 +11,8 @@ public class Bullet {
     // 총알 위치 좌표, 속도, 방향
     private int x;
     private int y;
+    private int width = 5; // 총알의 너비
+    private int height = 10; // 총알의 높이
 
     public Bullet(int x, int y, boolean direction) {
         this.x = x;
@@ -29,5 +33,9 @@ public class Bullet {
     // 총알이 화면 밖으로 나갔는지 확인하는 메소드
     public boolean isOutOfBounds() {
         return y < 0 || y > SCREEN_HEIGHT; //
+    }
+
+    public Rectangle getBounds() {
+        return new Rectangle(x, y, width, height);
     }
 }

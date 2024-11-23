@@ -166,6 +166,16 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             Player player2 = this.sessions.get(sessionArray[1]);
             gameService.moveBullets(player1);
             gameService.moveBullets(player2);
+
+            // 충돌 감지 및 처리
+            if (gameService.checkCollision(player1, player2.getBullets())) {
+                gameService.handleGameOver(player1); // Player1 종료 처리
+            }
+            if (gameService.checkCollision(player2, player1.getBullets())) {
+                gameService.handleGameOver(player2); // Player2 종료 처리
+            }
+            // 총알 삭제 (화면 밖 및 충돌)
+            removeOffScreenAndCollidingBullets(player1, player2);
         }
     }
 
