@@ -207,47 +207,55 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // 위치 정보 업데이트 메소드 - 양방향 동기화
     private void sendUpdatedPosition(WebSocketSession session1, WebSocketSession session2) {
 
-        // 세션에 해당하는 Player 가져오기
         try
         {
-            Player player1 = sessions.get(session1);
-            Player player2 = sessions.get(session2);
-
-
-            GameStateDTO gameStateDTO1 = GameStateDTO.builder()
-                    .player1X(player1.getX())
-                    .player1Y(player1.getY())
-                    .player1BulletPositionDTO(player1.getDTO())
-                    .player2X(player2.getX())
-                    .player2Y(player2.getY())
-                    .player2BulletPositionDTO(player2.getDTO())
-                    .build();
-
-            GameStateDTO gameStateDTO2 = GameStateDTO.builder()
-                    .player1X(player2.getX())
-                    .player1Y(player2.getY())
-                    .player1BulletPositionDTO(gameStateDTO1.getPlayer2BulletPositionDTO())
-                    .player2X(player1.getX())
-                    .player2Y(player1.getY())
-                    .player2BulletPositionDTO(gameStateDTO1.getPlayer1BulletPositionDTO())
-                    .build();
+            // 세션에 해당하는 Player 가져오기
             try
             {
-                // DTO를 json으로
-                String json1 = objectMapper.writeValueAsString(gameStateDTO1);
-                String json2 = objectMapper.writeValueAsString(gameStateDTO2);
+                Player player1 = sessions.get(session1);
+                Player player2 = sessions.get(session2);
 
-                session1.sendMessage(new TextMessage("UPDATE-" + json1));
-                session2.sendMessage(new TextMessage("UPDATE-" + json2));
 
-            } catch (Exception e)
+                GameStateDTO gameStateDTO1 = GameStateDTO.builder()
+                        .player1X(player1.getX())
+                        .player1Y(player1.getY())
+                        .player1BulletPositionDTO(player1.getDTO())
+                        .player2X(player2.getX())
+                        .player2Y(player2.getY())
+                        .player2BulletPositionDTO(player2.getDTO())
+                        .build();
+
+                GameStateDTO gameStateDTO2 = GameStateDTO.builder()
+                        .player1X(player2.getX())
+                        .player1Y(player2.getY())
+                        .player1BulletPositionDTO(gameStateDTO1.getPlayer2BulletPositionDTO())
+                        .player2X(player1.getX())
+                        .player2Y(player1.getY())
+                        .player2BulletPositionDTO(gameStateDTO1.getPlayer1BulletPositionDTO())
+                        .build();
+                try
+                {
+                    // DTO를 json으로
+                    String json1 = objectMapper.writeValueAsString(gameStateDTO1);
+                    String json2 = objectMapper.writeValueAsString(gameStateDTO2);
+
+                    session1.sendMessage(new TextMessage("UPDATE-" + json1));
+                    session2.sendMessage(new TextMessage("UPDATE-" + json2));
+
+                } catch (Exception e)
+                {
+                    log.info(e.getMessage());
+                    log.info("Error parsing positionDTO");
+                }
+            } catch (NullPointerException e)
             {
-                log.info(e.getMessage());
-                log.info("Error parsing positionDTO");
+                log.info("종료된세션에 대한 처리");
+                return;
             }
-        }catch(NullPointerException e){
+        }catch(NullPointerException e)
+        {
+            log.info(e.getMessage());
             log.info("종료된세션에 대한 처리");
-            return;
         }
     }
 
