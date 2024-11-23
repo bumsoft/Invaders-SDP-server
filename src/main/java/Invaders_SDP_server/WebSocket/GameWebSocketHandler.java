@@ -104,7 +104,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                         for (WebSocketSession ses : set)
                         {
                             Player player = sessions.get(ses);
-                            player.setY(player.isDirection()?600:50);
+                            player.setY(player.isDirection()?590:8);
                             ses.sendMessage(new TextMessage("Start"));
                         }
                         activeRoom.put(room.getId(), set); //실행방추가

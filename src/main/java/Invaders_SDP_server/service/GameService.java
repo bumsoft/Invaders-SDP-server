@@ -7,7 +7,6 @@ package Invaders_SDP_server.service;
 
 import Invaders_SDP_server.data.Bullet;
 import Invaders_SDP_server.data.Player;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,19 +25,15 @@ public class GameService {
             case "left":
                 if(x-7 >0) // 왼쪽 경계
                     player.setX(x-7);
+                else
+                    player.setX(0);
                 break;
             case "right":
-                if(x+14 < 600) // 오른쪽 경계
+                if(x+7 < 600-42) // 오른쪽 경계
                     player.setX(x+7);
+                else
+                    player.setX(600-42);
                 break;
-            case "up":
-                if (y - 7 > 0) // 위쪽 경계
-                    player.setY(y - 7);
-                break;
-            case "down":
-                if (y + 7 < 600) // 아래쪽 경계
-                    player.setY(y + 7);
-                break;    
         }
     }
 
