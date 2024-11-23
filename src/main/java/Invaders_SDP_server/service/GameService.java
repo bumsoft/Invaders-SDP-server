@@ -24,20 +24,20 @@ public class GameService {
 
         switch(msg){
             case "left":
-                if(x-10 >0) // 왼쪽 경계
-                    player.setX(x-10);
+                if(x-7 >0) // 왼쪽 경계
+                    player.setX(x-7);
                 break;
             case "right":
-                if(x+10 < 600) // 오른쪽 경계
-                    player.setX(x+10);
+                if(x+7 < 600) // 오른쪽 경계
+                    player.setX(x+7);
                 break;
             case "up":
-                if (y - 10 > 0) // 위쪽 경계
-                    player.setY(y - 10);
+                if (y - 7 > 0) // 위쪽 경계
+                    player.setY(y - 7);
                 break;
             case "down":
-                if (y + 10 < 600) // 아래쪽 경계
-                    player.setY(y + 10);
+                if (y + 7 < 600) // 아래쪽 경계
+                    player.setY(y + 7);
                 break;    
         }
     }
