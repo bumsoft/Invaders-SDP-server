@@ -52,14 +52,14 @@ public class GameService {
         {
             for(Bullet bullet : bullets)
             {
-                bullet.setY(bullet.getY()-5);
+                bullet.setY(bullet.getY()-10);
             }
         }
         else//아래로
         {
             for(Bullet bullet : bullets)
             {
-                bullet.setY(bullet.getY()+5);
+                bullet.setY(bullet.getY()+10);
             }
         }
     }
@@ -74,9 +74,22 @@ public class GameService {
         }
         
         for (Bullet bullet : enemyBullets) {
-            if (player.getBounds().intersects(bullet.getBounds())) { // 충돌 감지
-                return true; // 충돌 발생
-            }
+//            if (player.getBounds().intersects(bullet.getBounds())) { // 충돌 감지
+//                return true; // 충돌 발생
+            int centerAX = player.getX() + player.getWidth() / 2;
+            int centerAY = player.getY() + player.getHeight() / 2;
+
+            int centerBX = bullet.getX() + bullet.getWidth() / 2;
+            int centerBY = bullet.getY() + bullet.getHeight() / 2;
+            // Calculate maximum distance without collision.
+            int maxDistanceX = player.getWidth() / 2 + bullet.getWidth() / 2;
+            int maxDistanceY = player.getHeight() / 2 + bullet.getHeight() / 2;
+            // Calculates distance.
+            int distanceX = Math.abs(centerAX - centerBX);
+            int distanceY = Math.abs(centerAY - centerBY);
+
+            if(distanceX < maxDistanceX && distanceY < maxDistanceY)
+                return true;
         }
     return false;
     }

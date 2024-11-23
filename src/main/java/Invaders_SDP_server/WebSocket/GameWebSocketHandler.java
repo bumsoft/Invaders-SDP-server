@@ -155,7 +155,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     //총알위치 업뎃. 충돌처리도 여기서 할 것
-    @Scheduled(fixedRate = 300)
+    @Scheduled(fixedRate = 100)
     public void update()
     {
         for (Set<WebSocketSession> sessions : activeRoom.values())
@@ -175,7 +175,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     } catch (Exception e) {
                         log.error("Error sending game over message for Player 1", e);
                     }
-                    break;
+                    continue;
                 }
                 if (isPlayer2Over(player1, player2)) {
                     try {
@@ -184,7 +184,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     } catch (Exception e) {
                         log.error("Error sending game over message for Player 2", e);
                     }
-                    break;
+                    continue;
                 }
             } catch (Exception e) {
                 log.error("Error during collision detection", e);
@@ -194,7 +194,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     // 주기적으로 서버에서 모든 클라이언트에게 최신화된 위치정보(플레이어 1,2, 총알 1,2) 전송
-    @Scheduled(fixedRate = 300) //60FPS기준 16ms마다 갱신필요 필요
+    @Scheduled(fixedRate = 100) //60FPS기준 16ms마다 갱신필요 필요
     public void sendUpdatedPositionToAll(){
 
         for (Set<WebSocketSession> sessions : activeRoom.values()) {
@@ -260,29 +260,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private boolean isPlayer2Over(Player player1, Player player2) {
         return gameService.checkCollision(player2, player1.getBullets());
     }
-
-// 총알 삭제 메소드 (총알이 상대와 충돌 혹은 화면 밖으로 나간 경우 삭제 처리)
-    /*private void removeOffScreenAndCollidingBullets(Player player, Player enemyPlayer){
-            // Player의 총알이 enemyPlayer와 충돌이 났는지 확인
-            Iterator<Bullet> iterator1 = player.getBullets().iterator();
-            while (iterator1.hasNext()) {
-                Bullet bullet = iterator1.next();
-                // 충돌 혹은 화면 밖으로 나가면 삭제
-                if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) {
-                    iterator1.remove();
-                }
-            }
-
-            // Player2의 총알이 PLayer1과 충돌이 났는지 확인
-            Iterator<Bullet> iterator2 = enemyPlayer.getBullets().iterator();
-            while (iterator2.hasNext()) {
-                Bullet bullet = iterator2.next();
-                // 충돌 혹은 화면 밖으로 나가면 삭제
-                if (bullet.checkCollision(enemyPlayer) || bullet.isOutOfBounds()) { // 충돌 났으면 제거
-                    iterator2.remove();
-                }
-            }
-    } */
 
 
 

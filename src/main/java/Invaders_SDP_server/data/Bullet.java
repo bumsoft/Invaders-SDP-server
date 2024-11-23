@@ -11,7 +11,7 @@ public class Bullet {
     // 총알 위치 좌표, 속도, 방향
     private int x;
     private int y;
-    private int width = 5; // 총알의 너비
+    private int width = 6; // 총알의 너비
     private int height = 10; // 총알의 높이
 
     public Bullet(int x, int y, boolean direction) {
@@ -35,7 +35,4 @@ public class Bullet {
         return y < 0 || y > SCREEN_HEIGHT; //
     }
 
-    public Rectangle getBounds() {
-        return new Rectangle(x, y, width, height);
-    }
 }
