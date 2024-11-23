@@ -28,7 +28,7 @@ public class GameService {
                     player.setX(x-7);
                 break;
             case "right":
-                if(x+7 < 600) // 오른쪽 경계
+                if(x+14 < 600) // 오른쪽 경계
                     player.setX(x+7);
                 break;
             case "up":
