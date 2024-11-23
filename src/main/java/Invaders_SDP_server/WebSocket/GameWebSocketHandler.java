@@ -18,6 +18,8 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -126,31 +128,70 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
     @Scheduled(fixedRate = 1000) //1초마다 유효하지 않은 대기방, 실행방, 엔티티 삭제
     @Transactional
-    public void removeClosedSession()
+    public void removeClosedSession() throws IOException
     {
+        List<Long> roomsToRemove = new ArrayList<>();
         for(Long roomId : activeRoom.keySet())
         {
             Set<WebSocketSession> set = activeRoom.get(roomId);
+            if(set==null || set.isEmpty())
+            {
+                roomsToRemove.add(roomId);
+                continue;
+            }
             for(WebSocketSession ses : set)
             {
                 if(!sessions.containsKey(ses))
                 {
-                    activeRoom.remove(roomId);
-                    roomRepository.removeById(roomId);
+                    roomsToRemove.add(roomId);
+                    break;
                 }
             }
         }
         for(Long roomId : waitingRoom.keySet())
         {
             Set<WebSocketSession> set = waitingRoom.get(roomId);
+            if(set==null || set.isEmpty())
+            {
+                roomsToRemove.add(roomId);
+                continue;
+            }
             for(WebSocketSession ses : set)
             {
                 if(!sessions.containsKey(ses))
                 {
-                    waitingRoom.remove(roomId);
-                    roomRepository.removeById(roomId);
+                    roomsToRemove.add(roomId);
+                    break;
                 }
             }
+        }
+        for(Long roomId : roomsToRemove)
+        {
+            Set<WebSocketSession> set1 = activeRoom.get(roomId);
+            if(set1 != null)
+            {
+                for (WebSocketSession ses : set1)
+                {
+                    if (ses.isOpen())
+                    {
+                        ses.sendMessage(new TextMessage("ERROR-상대의 게임종료"));
+                    }
+                }
+            }
+            Set<WebSocketSession> set2 = waitingRoom.get(roomId);
+            if(set2 != null)
+            {
+                for (WebSocketSession ses : set2)
+                {
+                    if (ses.isOpen())
+                    {
+                        ses.sendMessage(new TextMessage("ERROR-상대의 게임종료"));
+                    }
+                }
+            }
+            activeRoom.remove(roomId);
+            waitingRoom.remove(roomId);
+            roomRepository.deleteById(roomId);
         }
     }
 
@@ -162,8 +203,15 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         {
             //세션들(2개) 가져오기
             WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[0]); //0으로 해두면 알아서.
+            if(sessionArray.length == 0) continue;
             Player player1 = this.sessions.get(sessionArray[0]);
             Player player2 = this.sessions.get(sessionArray[1]);
+            if(player1 == null || player2 == null)
+            {
+                this.sessions.remove(sessionArray[0]);
+                this.sessions.remove(sessionArray[1]);
+                continue;
+            }
             gameService.moveBullets(player1);
             gameService.moveBullets(player2);
 
@@ -200,6 +248,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         for (Set<WebSocketSession> sessions : activeRoom.values()) {
             //세션들(2개) 가져오기
             WebSocketSession[] sessionArray = sessions.toArray(new WebSocketSession[0]); //0으로 해두면 알아서.
+            if(sessionArray.length==0) continue;
             sendUpdatedPosition(sessionArray[0], sessionArray[1]);
         }
     }
@@ -287,6 +336,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     {
         log.info("클라이언트에서 연결을 종료함");
         sessions.remove(session);
+
     }
 }
 

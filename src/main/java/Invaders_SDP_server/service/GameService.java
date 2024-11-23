@@ -69,7 +69,6 @@ public class GameService {
     public boolean checkCollision(Player player, List<Bullet> enemyBullets) {
         // null 또는 비어 있는 리스트 확인
         if (enemyBullets == null || enemyBullets.isEmpty()) {
-            System.out.println("No bullets to check for collision");
             return false;
         }
         
