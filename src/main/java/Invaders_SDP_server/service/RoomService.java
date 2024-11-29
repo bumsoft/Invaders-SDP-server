@@ -21,6 +21,11 @@ public class RoomService {
     @Autowired
     UserRepository userRepository;
 
+    // 생성자 주입
+    @Autowired
+    public RoomService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Transactional
     public Room createRoom(String username)
@@ -78,6 +83,7 @@ public class RoomService {
             log.info("cannot find user:{} while joining room", player2Name);
             return null; //p2가 없는경우
         }
+
     }
 
     @Transactional

@@ -1,9 +1,11 @@
 package Invaders_SDP_server.data;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.awt.*;
 
+@NoArgsConstructor
 @Data
 // 서버에서 총알 관리 (Player 와는 독립적으로 작성)
 public class Bullet {

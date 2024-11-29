@@ -34,10 +34,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     final ObjectMapper objectMapper = new ObjectMapper();
 
     //연결된 모든 세션: sessions맵 생성 - session, player 객체 저장하여 관리
-    private final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();
+    public final Map<WebSocketSession, Player> sessions = new ConcurrentHashMap<>();
 
     //게임중인 방 세션모음, Long은 RoomId임
-    private Map<Long, Set<WebSocketSession>> activeRoom = new ConcurrentHashMap<>();
+    public Map<Long, Set<WebSocketSession>> activeRoom = new ConcurrentHashMap<>();
 
     //대기중인 방 세션모음
     private Map<Long, Set<WebSocketSession>> waitingRoom = new ConcurrentHashMap<>();
@@ -54,7 +54,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         this.gameService = gameService;
     }
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String msg = message.getPayload().toLowerCase();
         //msg는 메서드-사용자이름형태-optional형태
         //msg를 -기준으로 나누는 작업
@@ -252,7 +252,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     // 위치 정보 업데이트 메소드 - 양방향 동기화
-    private void sendUpdatedPosition(WebSocketSession session1, WebSocketSession session2) {
+    public void sendUpdatedPosition(WebSocketSession session1, WebSocketSession session2) {
 
         try
         {
