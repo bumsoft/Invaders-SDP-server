@@ -1,12 +1,14 @@
-package Invaders_SDP_server.User.domain;
+package Invaders_SDP_server.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Getter
 @Entity
+@Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Setter
 public class User {
 
     @Id

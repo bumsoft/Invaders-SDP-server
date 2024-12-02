@@ -1,9 +1,10 @@
-package Invaders_SDP_server.User.controller;
+package Invaders_SDP_server.controller;
 
-import Invaders_SDP_server.User.dto.Request_RegisterDto;
-import Invaders_SDP_server.User.dto.Response_UserScoreDto;
-import Invaders_SDP_server.User.service.UserService;
+import Invaders_SDP_server.dto.Request_RegisterDto;
+import Invaders_SDP_server.dto.Response_UserScoreDto;
+import Invaders_SDP_server.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +12,10 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody Request_RegisterDto requestRegisterDto) {
