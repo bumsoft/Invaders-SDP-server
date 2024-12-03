@@ -3,7 +3,7 @@ Space Invaders Server는 클라이언트와 동일한 네트워크(같은 Wi-Fi)
 이 서버는 8080 포트를 통해 클라이언트와 통신합니다.
 
 
-## Server Repository 
+## Client Repository 
 클라이언트 리포지토리 주소입니다 : https://github.com/bumsoft/Invaders-SDP
 
 ## Set up
