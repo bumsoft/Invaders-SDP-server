@@ -40,5 +40,54 @@ cmd실행
 
 - 클라이언트 세팅 관련은 서버 리포지토리 README 참고
 
-## 주의사항
+## notes
 데이터베이스 연결이 안되었을 시 서버 실행에 문제가 발생할 수 있습니다.
+
+
+# Space Invaders Server
+The Space Invaders Server enables the Space Invaders game to run by communicating with the client over the same network (e.g., the same Wi-Fi).
+This server uses port 8080 for client-server communication.
+
+## Client Repository
+Client repository URL: https://github.com/bumsoft/Invaders-SDP
+
+## Set up
+### Requirements:
+- Java Version: 17
+- Database: MySQL
+1. Database Setup
+   Run the following command in MySQL to create the database:
+```
+create database invaders;
+```
+2. Update application.properties
+   Modify the application.properties file to include your database credentials:
+```
+# DB username
+spring.datasource.username=<your-username>
+
+# DB password
+spring.datasource.password=<your-password>
+```
+3. Open Port 8080
+   Allow inbound traffic on port 8080:
+```
+Open Windows Firewall
+-> Go to Advanced Settings
+-> Add a new Inbound Rule
+-> Select Port as the rule type
+-> Enter port 8080
+-> Leave all other settings as default and enable the rule
+```
+4. Share IPv4 Address
+   Share the IPv4 address of the server machine with the client:
+```
+Open Command Prompt (cmd)
+-> Run the command: ipconfig
+-> Copy the IPv4 Address and share it with the client.
+```
+5. Client Configuration
+   Refer to the Client Repository README for client setup instructions.
+
+## Notes
+The server may fail to start if the database connection is not properly configured. Ensure that all required database settings are correctly set up before running the server.
